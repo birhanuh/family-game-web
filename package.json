@@ -1,0 +1,56 @@
+{
+  "name": "family-game-web",
+  "version": "1.0.0",
+  "description": "#### Running the project + Clone the project you local machine. + Install dependencies with **npm install** and run with **npm start**",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --open --config ./config/webpack.dev.js",
+    "watch": "webpack --watch",
+    "build": "webpack --config ./config/webpack.prod.js",
+    "postbuild": "cp ./public/favicon.ico ./config/dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/birhanuh/family-game-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/birhanuh/family-game-web/issues"
+  },
+  "homepage": "https://github.com/birhanuh/family-game-web#readme",
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-react": "^7.6.3",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-router-dom": "^5.1.7",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^3.2.0",
+    "file-loader": "^4.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "less": "^4.1.1",
+    "less-loader": "^7.3.0",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^8.0.0",
+    "style-loader": "^1.0.0",
+    "ts-loader": "^8.1.0",
+    "typescript": "^4.2.4",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9",
+    "webpack-dev-server": "^3.9.0"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^4.5.0",
+    "antd": "^4.14.0",
+    "classnames": "^2.2.6",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-router-dom": "^5.2.0"
+  }
+}

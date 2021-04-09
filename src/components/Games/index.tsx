@@ -6,6 +6,7 @@ import { connect } from "react-redux";
 import { getGames, createGame } from '../../actions/game'
 import { addPlayer } from '../../actions/player'
 import { addQuestion } from '../../actions/question'
+import { GameProp } from "../../actions/types";
 
 const { Title } = Typography;
 
@@ -22,7 +23,15 @@ interface State {
   isQuestionModalVisible: boolean
 }
 
-class Games extends PureComponent<{}, State> {
+interface Props {
+  getGames: () => void;
+  createGame: (title: string) => Promise<void>;
+  addPlayer: (name: string) => Promise<void>;
+  addQuestion: (title: string) => Promise<void>;
+  games: [GameProp];
+}
+
+class Games extends PureComponent<Props, State> {
   state = {
     title: '',
     player: {
@@ -34,6 +43,10 @@ class Games extends PureComponent<{}, State> {
     isTitleModalVisible: false,
     isPlayerModalVisible: false,
     isQuestionModalVisible: false
+  }
+
+  componentDidMount() {
+    this.props.getGames()
   }
 
   // Title
@@ -57,6 +70,8 @@ class Games extends PureComponent<{}, State> {
 
   onTitleFinish = (values: any) => {
     console.log('Success:', values);
+
+    this.props.createGame(values.title);
   };
 
   onTitleFinishFailed = (errorInfo: any) => {
@@ -84,6 +99,8 @@ class Games extends PureComponent<{}, State> {
 
   onPlayerFinish = (values: any) => {
     console.log('Success:', values);
+
+    this.props.addPlayer(values.name);
   };
 
   onPlayerFinishFailed = (errorInfo: any) => {
@@ -111,6 +128,8 @@ class Games extends PureComponent<{}, State> {
 
   onQuestionFinish = (values: any) => {
     console.log('Success:', values);
+
+    this.props.addQuestion(values.title);
   };
 
   onQuestionFinishFailed = (errorInfo: any) => {

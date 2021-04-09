@@ -15,17 +15,17 @@ export function getPlayersAction(player: [PlayerProp]) {
   }
 }
 
-export function getPlayerAction(question: PlayerProp) {
+export function getPlayerAction(player: PlayerProp) {
   return {
     type: GET_PLAYER,
-    question
+    player
   }
 }
 
-export function updatedPlayerAction(question: PlayerProp) {
+export function updatedPlayerAction(player: PlayerProp) {
   return {
     type: UPDATE_PLAYER,
-    question
+    player
   }
 }
 
@@ -60,9 +60,9 @@ export function getPlayer(id: string) {
   }
 }
 
-export function updatePlayer(question: PlayerProp) {
+export function updatePlayer(player: PlayerProp) {
   return (dispatch: any) => {
-    return axios.put(`/api/player/${question.id}`, question).then(res => {
+    return axios.put(`/api/player/${player.id}`, player).then(res => {
       dispatch(updatedPlayerAction(res.data.result))
     })
   }

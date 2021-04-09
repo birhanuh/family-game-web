@@ -2,7 +2,7 @@ import React, { PureComponent } from "react";
 import { Button, Card, Col, Row, List, Typography } from 'antd';
 import { PlayCircleOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
-import { GameProp } from "../../actions/types";
+import { GameProp, PlayerProp, QuestionProp } from "../../actions/types";
 import { getGame } from '../../actions/game'
 import { updatePlayer } from '../../actions/player'
 import { updateQuestion } from '../../actions/question'
@@ -13,7 +13,14 @@ interface State {
   seconds: number;
 }
 
-class Game extends PureComponent<{}, State> {
+interface Props {
+  getGame: (id: string) => void;
+  updatePlayer: (player: PlayerProp) => Promise<void>;
+  updateQuestion: (question: QuestionProp) => Promise<void>;
+  game: GameProp;
+}
+
+class Game extends PureComponent<Props, State> {
   state = {
     seconds: 30
   }

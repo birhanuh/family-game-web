@@ -7,6 +7,8 @@ export const DELETE_GAME = 'DELETE_GAME'
 export interface GameProp {
   id: string;
   title: string;
+  players: [];
+  questions: [];
 }
 
 // PLAYERS

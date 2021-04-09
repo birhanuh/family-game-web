@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { Layout } from 'antd';
-import HeaderPage from "./Header";
-import FooterPage from "./Footer";
-import Games from "./Games";
-import Game from "./Game";
-import Players from "./Players";
+import HeaderPage from "./components/Header";
+import FooterPage from "./components/Footer";
+import Games from "./components/Games";
+import Game from "./components/Game";
+import Players from "./components/Players";
 
 const { Content } = Layout;
 

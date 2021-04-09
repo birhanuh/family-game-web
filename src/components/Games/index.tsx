@@ -2,6 +2,10 @@ import React, { PureComponent } from "react";
 import { Form, Input, List, Card, Button, Typography, Col, Row, Tag, Modal } from 'antd';
 import { CheckCircleOutlined, FileUnknownOutlined, PlayCircleOutlined, PlusCircleOutlined, UserAddOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+import { getGames, createGame } from '../../actions/game'
+import { addPlayer } from '../../actions/player'
+import { addQuestion } from '../../actions/question'
 
 const { Title } = Typography;
 
@@ -282,4 +286,10 @@ class Games extends PureComponent<{}, State> {
   }
 }
 
-export default Games;
+function mapStateToProps(state: any) {
+  return {
+    games: state.games
+  }
+}
+
+export default connect(mapStateToProps, { getGames, createGame, addPlayer, addQuestion })(Games);

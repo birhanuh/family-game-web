@@ -1,6 +1,11 @@
 import React, { PureComponent } from "react";
 import { Button, Card, Col, Row, List, Typography } from 'antd';
 import { PlayCircleOutlined } from "@ant-design/icons";
+import { connect } from "react-redux";
+import { GameProp } from "../../actions/types";
+import { getGame } from '../../actions/game'
+import { updatePlayer } from '../../actions/player'
+import { updateQuestion } from '../../actions/question'
 
 const { Title } = Typography;
 
@@ -93,4 +98,13 @@ class Game extends PureComponent<{}, State> {
   }
 }
 
-export default Game;
+function mapStateToProps(state: any, props: any) {
+  const { match } = props
+  if (match.params.id) {
+    return {
+      game: state.game.find((item: GameProp) => item.id === match.params.id)
+    }
+  }
+}
+
+export default connect(mapStateToProps, { getGame, updatePlayer, updateQuestion })(Game);

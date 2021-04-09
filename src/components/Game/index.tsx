@@ -82,7 +82,7 @@ class Game extends PureComponent<{}, State> {
         </Row>
         <Row
           justify="center"
-          style={{ marginTop: 40 }}
+          style={{ marginTop: 60 }}
         >
           <Col xs={24} sm={24} md={8} lg={8} xl={8}>
             <Button type='primary' size='large' className='start-btn' block={true} onClick={() => { }}><PlayCircleOutlined />Start</Button>

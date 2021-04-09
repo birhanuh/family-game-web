@@ -4,6 +4,7 @@ import { Layout } from 'antd';
 import HeaderPage from "./Header";
 import FooterPage from "./Footer";
 import Games from "./Games";
+import Game from "./Game";
 import Players from "./Players";
 
 const { Content } = Layout;
@@ -18,6 +19,7 @@ class App extends Component {
             <Switch>
               <Route exact={true} path="/" component={Games} />
               <Route exact={true} path="/games" component={Games} />
+              <Route exact={true} path="/games/:gameId" component={Game} />
               <Route exact={true} path="/players" component={Players} />
             </Switch>
           </Content>

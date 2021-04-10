@@ -1,7 +1,11 @@
+const webpack = require("webpack");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
+
+// env
+const env = require("../env");
 
 module.exports = {
   mode: "production",
@@ -16,6 +20,11 @@ module.exports = {
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: "./public/index.html"
+    }),
+    new webpack.DefinePlugin({
+      "process.env.NODE_ENV": JSON.stringify("production"),
+      "process.env.CLIENT_URL": JSON.stringify("http://localhost:3000"),
+      "process.env.API_URL": JSON.stringify("http://localhost:3000/dev")
     })
   ],
   output: {

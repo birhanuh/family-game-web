@@ -6,75 +6,79 @@ import { connect } from "react-redux";
 import { getGames, createGame } from '../../actions/game'
 import { addPlayer } from '../../actions/player'
 import { addQuestion } from '../../actions/question'
-import { GameProp } from "../../actions/types";
+import { GameProp, PlayerProp, QuestionProp } from "../../actions/types";
 
 const { Title } = Typography;
 
 interface State {
-  title: string;
+  game: {
+    title: string;
+  }
   player: {
     name: string;
   };
   question: {
     title: string;
   };
-  isTitleModalVisible: boolean,
+  isGameModalVisible: boolean,
   isPlayerModalVisible: boolean,
   isQuestionModalVisible: boolean
 }
 
 interface Props {
-  getGames: () => void;
-  createGame: (title: string) => Promise<void>;
-  addPlayer: (name: string) => Promise<void>;
-  addQuestion: (title: string) => Promise<void>;
+  getGames: () => Promise<void>;
+  createGame: (game: GameProp) => Promise<void>;
+  addPlayer: (player: PlayerProp) => Promise<void>;
+  addQuestion: (question: QuestionProp) => Promise<void>;
   games: [GameProp];
 }
 
 class Games extends PureComponent<Props, State> {
   state = {
-    title: '',
+    game: {
+      title: ''
+    },
     player: {
       name: ''
     },
     question: {
       title: ''
     },
-    isTitleModalVisible: false,
+    isGameModalVisible: false,
     isPlayerModalVisible: false,
     isQuestionModalVisible: false
   }
 
   componentDidMount() {
-    this.props.getGames()
+    this.props.getGames();
   }
 
-  // Title
-  handleTitle = () => {
+  // Game
+  handleGame = () => {
     this.setState(({
-      isTitleModalVisible: true
+      isGameModalVisible: true
     }));
   };
 
-  handleOkTitle = () => {
+  handleOkGame = () => {
     this.setState(({
-      isTitleModalVisible: false
+      isGameModalVisible: false
     }));
   };
 
-  handleCancelTitle = () => {
+  handleCancelGame = () => {
     this.setState(({
-      isTitleModalVisible: false
+      isGameModalVisible: false
     }));
   };
 
-  onTitleFinish = (values: any) => {
+  onGameFinish = (values: any) => {
     console.log('Success:', values);
 
-    this.props.createGame(values.title);
+    this.props.createGame(values);
   };
 
-  onTitleFinishFailed = (errorInfo: any) => {
+  onGameFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
@@ -100,7 +104,7 @@ class Games extends PureComponent<Props, State> {
   onPlayerFinish = (values: any) => {
     console.log('Success:', values);
 
-    this.props.addPlayer(values.name);
+    this.props.addPlayer(values);
   };
 
   onPlayerFinishFailed = (errorInfo: any) => {
@@ -129,7 +133,7 @@ class Games extends PureComponent<Props, State> {
   onQuestionFinish = (values: any) => {
     console.log('Success:', values);
 
-    this.props.addQuestion(values.title);
+    this.props.addQuestion(values);
   };
 
   onQuestionFinishFailed = (errorInfo: any) => {
@@ -137,7 +141,7 @@ class Games extends PureComponent<Props, State> {
   };
 
   render() {
-    const { title, player: { name }, question: { title: questionTitle }, isTitleModalVisible, isPlayerModalVisible, isQuestionModalVisible } = this.state;
+    const { game: { title }, player: { name }, question: { title: questionGame }, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible } = this.state;
 
     const games = [
       {
@@ -179,7 +183,7 @@ class Games extends PureComponent<Props, State> {
           style={{ marginTop: 40, textAlign: 'center' }}>
           <Col xs={24} sm={24} md={24} lg={24} xl={20}>
             <Title level={3}>Ipsum is simply dummy text of the printing and typesetting industry.</Title>
-            <Button type='primary' size="large" onClick={() => this.handleTitle()}><PlusCircleOutlined />Create game</Button>
+            <Button type='primary' size="large" onClick={() => this.handleGame()}><PlusCircleOutlined />Create game</Button>
           </Col>
         </Row>
         <Row
@@ -232,15 +236,15 @@ class Games extends PureComponent<Props, State> {
           </Col>
         </Row>
         {/* Game modal */}
-        <Modal title="Enter game title" visible={isTitleModalVisible} onOk={this.handleOkTitle} onCancel={this.handleCancelTitle} okText="Ready">
+        <Modal title="Enter game title" visible={isGameModalVisible} onOk={this.handleOkGame} onCancel={this.handleCancelGame} okText="Ready">
           <Form
             layout="vertical"
             initialValues={{ title }}
-            onFinish={this.onTitleFinish}
-            onFinishFailed={this.onTitleFinishFailed}
+            onFinish={this.onGameFinish}
+            onFinishFailed={this.onGameFinishFailed}
           >
             <Form.Item
-              label="Title"
+              label="Game"
               name="title"
               rules={[{ required: true, message: 'Please input game title!' }]}
             >
@@ -282,7 +286,7 @@ class Games extends PureComponent<Props, State> {
           {questions.map(question => <Tag key={question.id}>{question.title}</Tag>)}
           <Form
             layout="vertical"
-            initialValues={{ title: questionTitle }}
+            initialValues={{ title: questionGame }}
             onFinish={this.onQuestionFinish}
             onFinishFailed={this.onQuestionFinishFailed}
             style={{ marginTop: 20 }}

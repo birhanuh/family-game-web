@@ -36,9 +36,9 @@ export function deletedPlayerAction(id: string) {
   }
 }
 
-export function addPlayer(title: string) {
+export function addPlayer(player: PlayerProp) {
   return (dispatch: any) => {
-    return axios.post('/api/player', title).then(res => {
+    return axios.post(`${process.env.API_URL}/player`, player).then(res => {
       dispatch(addPlayerAction(res.data.result))
     })
   }
@@ -46,7 +46,7 @@ export function addPlayer(title: string) {
 
 export function getPlayers() {
   return (dispatch: any) => {
-    return axios.get('/api/player').then(res => {
+    return axios.get(`${process.env.API_URL}/player`).then(res => {
       dispatch(getPlayersAction(res.data.results))
     })
   }
@@ -54,7 +54,7 @@ export function getPlayers() {
 
 export function getPlayer(id: string) {
   return (dispatch: any) => {
-    return axios.get(`/api/player/${id}`).then(res => {
+    return axios.get(`${process.env.API_URL}/player/${id}`).then(res => {
       dispatch(getPlayerAction(res.data.result))
     })
   }
@@ -62,7 +62,7 @@ export function getPlayer(id: string) {
 
 export function updatePlayer(player: PlayerProp) {
   return (dispatch: any) => {
-    return axios.put(`/api/player/${player.id}`, player).then(res => {
+    return axios.put(`${process.env.API_URL}/player/${player.id}`, player).then(res => {
       dispatch(updatedPlayerAction(res.data.result))
     })
   }
@@ -70,7 +70,7 @@ export function updatePlayer(player: PlayerProp) {
 
 export function deletePlayer(id: string) {
   return (dispatch: any) => {
-    return axios.delete(`/api/player/${id}`).then(() => {
+    return axios.delete(`${process.env.API_URL}/player/${id}`).then(() => {
       dispatch(deletedPlayerAction(id))
     })
   }

@@ -6,12 +6,17 @@ import { GameProp, PlayerProp, QuestionProp } from "../../actions/types";
 import { getGame } from '../../actions/game'
 import { updatePlayer } from '../../actions/player'
 import { updateQuestion } from '../../actions/question'
+import { RouteComponentProps } from "react-router";
 
 const { Title } = Typography;
 
 interface State {
   seconds: number;
 }
+
+interface MatchParams {
+  gameId: string;
+};
 
 interface Props {
   getGame: (id: string) => void;
@@ -20,9 +25,18 @@ interface Props {
   game: GameProp;
 }
 
-class Game extends PureComponent<Props, State> {
+class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State> {
   state = {
     seconds: 30
+  }
+
+  componentDidMount = () => {
+    // Fetch Project when id is present in params
+    const { match } = this.props
+
+    if (match.params.gameId) {
+      this.props.getGame(match.params.gameId);
+    }
   }
 
   render() {
@@ -109,7 +123,7 @@ function mapStateToProps(state: any, props: any) {
   const { match } = props
   if (match.params.id) {
     return {
-      game: state.game.find((item: GameProp) => item.id === match.params.id)
+      game: state.games.find((item: GameProp) => item.id === match.params.id)
     }
   }
 }

@@ -36,9 +36,9 @@ export function deletedGameAction(id: string) {
   }
 }
 
-export function createGame(title: string) {
+export function createGame(game: any) {
   return (dispatch: any) => {
-    return axios.post('/api/games', title).then(res => {
+    return axios.post(`${process.env.API_URL}/games`, game).then(res => {
       dispatch(createGameAction(res.data.result))
     })
   }
@@ -46,15 +46,16 @@ export function createGame(title: string) {
 
 export function getGames() {
   return (dispatch: any) => {
-    return axios.get('/api/games').then(res => {
+    return axios.get(`${process.env.API_URL}/games`).then(res => {
       dispatch(getGamesAction(res.data.results))
     })
   }
 }
 
 export function getGame(id: string) {
+  console.log('GA: ', id);
   return (dispatch: any) => {
-    return axios.get(`/api/games/${id}`).then(res => {
+    return axios.get(`${process.env.API_URL}/games/${id}`).then(res => {
       dispatch(getGameAction(res.data.result))
     })
   }
@@ -62,7 +63,7 @@ export function getGame(id: string) {
 
 export function updateGame(game: GameProp) {
   return (dispatch: any) => {
-    return axios.put(`/api/games/${game.id}`, game).then(res => {
+    return axios.put(`${process.env.API_URL}/games/${game.id}`, game).then(res => {
       dispatch(updatedGameAction(res.data.result))
     })
   }
@@ -70,7 +71,7 @@ export function updateGame(game: GameProp) {
 
 export function deleteGame(id: string) {
   return (dispatch: any) => {
-    return axios.delete(`/api/games/${id}`).then(() => {
+    return axios.delete(`${process.env.API_URL}/games/${id}`).then(() => {
       dispatch(deletedGameAction(id))
     })
   }

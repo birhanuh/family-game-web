@@ -36,9 +36,9 @@ export function deletedQuestionAction(id: string) {
   }
 }
 
-export function addQuestion(title: string) {
+export function addQuestion(question: QuestionProp) {
   return (dispatch: any) => {
-    return axios.post('/api/questions', title).then(res => {
+    return axios.post(`${process.env.API_URL}/questions`, question).then(res => {
       dispatch(addQuestionAction(res.data.result))
     })
   }
@@ -46,7 +46,7 @@ export function addQuestion(title: string) {
 
 export function gethQuestions() {
   return (dispatch: any) => {
-    return axios.get('/api/questions').then(res => {
+    return axios.get(`${process.env.API_URL}/questions`).then(res => {
       dispatch(getQuestionsAction(res.data.results))
     })
   }
@@ -54,7 +54,7 @@ export function gethQuestions() {
 
 export function gethQuestion(id: string) {
   return (dispatch: any) => {
-    return axios.get(`/api/questions/${id}`).then(res => {
+    return axios.get(`${process.env.API_URL}/questions/${id}`).then(res => {
       dispatch(getQuestionAction(res.data.result))
     })
   }
@@ -62,7 +62,7 @@ export function gethQuestion(id: string) {
 
 export function updateQuestion(question: QuestionProp) {
   return (dispatch: any) => {
-    return axios.put(`/api/questions/${question.id}`, question).then(res => {
+    return axios.put(`${process.env.API_URL}/questions/${question.id}`, question).then(res => {
       dispatch(updatedQuestionAction(res.data.result))
     })
   }
@@ -70,7 +70,7 @@ export function updateQuestion(question: QuestionProp) {
 
 export function deleteQuestion(id: string) {
   return (dispatch: any) => {
-    return axios.delete(`/api/questions/${id}`).then(() => {
+    return axios.delete(`${process.env.API_URL}/questions/${id}`).then(() => {
       dispatch(deletedQuestionAction(id))
     })
   }

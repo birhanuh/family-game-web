@@ -1,28 +1,19 @@
 import React, { PureComponent } from "react";
-import { Form, Input, List, Card, Button, Typography, Col, Row, Tag, Modal } from 'antd';
+import { Form, Input, List, Card, Button, Typography, Col, Row, Tag, Modal, Alert, Badge } from 'antd';
 import { CheckCircleOutlined, FileUnknownOutlined, PlayCircleOutlined, PlusCircleOutlined, UserAddOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
-import { getGames, createGame } from '../../actions/game'
-import { addPlayer } from '../../actions/player'
-import { addQuestion } from '../../actions/question'
-import { GameProp, PlayerProp, QuestionProp } from "../../actions/types";
+import { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion } from '../../actions/game'
+import { DeletePlayerProp, DeleteQuestionProp, GameProp, PlayerProp, QuestionProp } from "../../actions/types";
+import classnames from "classnames";
 
 const { Title } = Typography;
 
 interface State {
-  game: {
-    title: string;
-  }
-  player: {
-    name: string;
-  };
-  question: {
-    title: string;
-  };
   isGameModalVisible: boolean,
   isPlayerModalVisible: boolean,
-  isQuestionModalVisible: boolean
+  isQuestionModalVisible: boolean,
+  isSubmitting: boolean;
 }
 
 interface Props {
@@ -30,23 +21,17 @@ interface Props {
   createGame: (game: GameProp) => Promise<void>;
   addPlayer: (player: PlayerProp) => Promise<void>;
   addQuestion: (question: QuestionProp) => Promise<void>;
+  deletePlayer: (player: DeletePlayerProp) => Promise<void>;
+  deleteQuestion: (question: DeleteQuestionProp) => Promise<void>;
   games: [GameProp];
 }
 
 class Games extends PureComponent<Props, State> {
   state = {
-    game: {
-      title: ''
-    },
-    player: {
-      name: ''
-    },
-    question: {
-      title: ''
-    },
     isGameModalVisible: false,
     isPlayerModalVisible: false,
-    isQuestionModalVisible: false
+    isQuestionModalVisible: false,
+    isSubmitting: false
   }
 
   componentDidMount() {
@@ -60,12 +45,6 @@ class Games extends PureComponent<Props, State> {
     }));
   };
 
-  handleOkGame = () => {
-    this.setState(({
-      isGameModalVisible: false
-    }));
-  };
-
   handleCancelGame = () => {
     this.setState(({
       isGameModalVisible: false
@@ -75,7 +54,18 @@ class Games extends PureComponent<Props, State> {
   onGameFinish = (values: any) => {
     console.log('Success:', values);
 
+    this.setState(({
+      isSubmitting: true
+    }));
+
     this.props.createGame(values);
+
+    this.setState(({
+      isGameModalVisible: false,
+      isSubmitting: false
+    }));
+
+    // this.props.form.resetFields()
   };
 
   onGameFinishFailed = (errorInfo: any) => {
@@ -101,14 +91,28 @@ class Games extends PureComponent<Props, State> {
     }));
   };
 
-  onPlayerFinish = (values: any) => {
-    console.log('Success:', values);
+  onPlayerFinish = (values: any, gameId: string) => {
+    console.log('Success:', values, gameId);
 
-    this.props.addPlayer(values);
+    this.setState(({
+      isSubmitting: true
+    }));
+
+    this.props.addPlayer({ ...values, gameId });
+
+    this.setState(({
+      isSubmitting: false
+    }));
   };
 
   onPlayerFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
+  };
+
+  deletePlayer = (player: DeletePlayerProp) => {
+    console.log('Id:', player);
+
+    this.props.deletePlayer(player);
   };
 
   // Question
@@ -130,59 +134,50 @@ class Games extends PureComponent<Props, State> {
     }));
   };
 
-  onQuestionFinish = (values: any) => {
+  onQuestionFinish = (values: any, gameId: string) => {
     console.log('Success:', values);
 
-    this.props.addQuestion(values);
+    this.setState(({
+      isSubmitting: true
+    }));
+
+    this.props.addQuestion({ ...values, gameId });
+
+    this.setState(({
+      isSubmitting: false
+    }));
   };
 
   onQuestionFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
+  deleteQuestion = (question: DeleteQuestionProp) => {
+    console.log('Id:', question);
+
+    this.props.deleteQuestion(question);
+  };
+
   render() {
-    const { game: { title }, player: { name }, question: { title: questionGame }, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible } = this.state;
+    const { isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = this.state;
 
-    const games = [
-      {
-        id: 1,
-        title: 'Game 1',
-      },
-      {
-        id: 2,
-        title: 'Game 2',
-      }
-    ];
+    const { games } = this.props;
 
-    const players = [
-      {
-        id: 1,
-        name: 'Player 1',
-      },
-      {
-        id: 2,
-        name: 'Player 2',
-      }
-    ];
-
-    const questions = [
-      {
-        id: 1,
-        title: 'Question 1',
-      },
-      {
-        id: 2,
-        title: 'Question 2',
-      }
-    ];
+    const EmptyListAlert = () => (<Alert
+      style={{ marginTop: 20, marginBottom: 20 }}
+      message="Currently here are no games yet"
+      description="Currently here are no games yet"
+      type="info"
+      showIcon={true}
+    />)
 
     return (
       <>
         <Row justify="center"
           className="games-heading"
-          style={{ marginTop: 40, textAlign: 'center' }}>
+          style={{ textAlign: 'center' }}>
           <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-            <Title level={3}>Ipsum is simply dummy text of the printing and typesetting industry.</Title>
+            <Title level={3}>Welcom to FamilyGames! Create game by clicking the "Create game" button bellow.</Title>
             <Button type='primary' size="large" onClick={() => this.handleGame()}><PlusCircleOutlined />Create game</Button>
           </Col>
         </Row>
@@ -202,44 +197,113 @@ class Games extends PureComponent<Props, State> {
                 xl: 1,
                 xxl: 1,
               }}
+              loading={!games}
+              locale={{ emptyText: <EmptyListAlert /> }}
               dataSource={games}
-              renderItem={item => (
-                <List.Item>
-                  <Card title={item.title} bordered={false}>
-                    <Row>
-                      <Col xs={24} sm={24} md={16} lg={16} xl={16} style={{ padding: 12 }}>
-                        <div className="questions-section">
-                          <div className="tags">
-                            {questions.map(question => <Tag key={question.id}>{question.title}</Tag>)}
-                          </div>
-                          <Button type='primary' size='small' className='add-question-btn' onClick={() => this.handleQuestion()}><FileUnknownOutlined />Add question</Button>
-                        </div>
-                      </Col>
-                      <Col xs={24} sm={24} md={8} lg={8} xl={8} style={{ padding: 12 }}>
-                        <div className="players-section">
-                          <div className="tags">
-                            {players.map(player => <Tag key={player.id}>{player.name}</Tag>)}
-                          </div>
-                          <Button type='primary' size='small' className='add-player-btn' onClick={() => this.handlePlayer()}><UserAddOutlined />Add player</Button>
-                        </div>
-                      </Col>
-                    </Row>
-                    <Row justify='center'>
-                      <Col xs={24} sm={24} md={8} lg={8} xl={8} style={{ padding: 12 }}>
-                        <Link to={`games/${item.id}`} className='ant-btn ant-btn-block play-btn'><PlayCircleOutlined /><span>{`Play ${item.title}`}</span></Link>
-                      </Col>
-                    </Row>
-                  </Card>
-                </List.Item>
+              renderItem={(item: GameProp) => (
+                <>
+                  <List.Item>
+                    <Badge.Ribbon className={classnames("seconds", {
+                      "no-winner": Object.keys(item.winner).length == 0
+                    })} text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}>
+                      <Card title={item.title} bordered={false}>
+                        {(item.players.length > item.questions.length && <Alert
+                          message="Number of Players should not be more than Questions"
+                          type="error"
+                          showIcon={true}
+                        />) || (item.players.length === 0 && item.questions.length === 0 && <Alert
+                          message="Add Players and Questions to start playing"
+                          type="error"
+                          showIcon={true}
+                        />) || (item.questions.length % item.players.length !== 0 && <Alert
+                          message="Number of Questions needs to be equally divided with number of Player"
+                          type="error"
+                          showIcon={true}
+                        />)}
+                        <Row>
+                          <Col xs={24} sm={24} md={16} lg={16} xl={16}>
+                            <div className="questions-section">
+                              <div className="tags">
+                                {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
+                              </div>
+                              <Button type='primary' size='small' className='add-question-btn' disabled={isSubmitting} onClick={() => this.handleQuestion()}><FileUnknownOutlined />Add question</Button>
+                            </div>
+                          </Col>
+                          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                            <div className="players-section">
+                              <div className="tags">
+                                {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
+                              </div>
+                              <Button type='primary' size='small' className='add-player-btn' disabled={isSubmitting} onClick={() => this.handlePlayer()}><UserAddOutlined />Add player</Button>
+                            </div>
+                          </Col>
+                        </Row>
+                        <Row justify='center'>
+                          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                            <Link className={classnames("ant-btn ant-btn-block play-btn", {
+                              "disabled": (item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0)
+                            })}
+                              to={(item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0) ? '' :
+                                `games/${item.gameId}`} ><PlayCircleOutlined /><span>{`Play ${item.title}`}</span></Link>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Badge.Ribbon>
+                  </List.Item>
+                  {/* Player modal */}
+                  <Modal title="Enter player" visible={isPlayerModalVisible} onOk={this.handleOkPlayer} onCancel={this.handleCancelPlayer} footer={false}>
+                    {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
+                    <Form
+                      layout="vertical"
+                      onFinish={(value) => this.onPlayerFinish(value, item.gameId)}
+                      onFinishFailed={this.onPlayerFinishFailed}
+                      style={{ marginTop: 20 }}
+                    >
+                      <Form.Item
+                        label="Name"
+                        name="name"
+                        rules={[{ required: true, message: 'Please input player name!' }]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <Form.Item>
+                        <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
+                      </Form.Item>
+                    </Form>
+                  </Modal>
+
+                  {/* Question modal */}
+                  <Modal title="Enter question" visible={isQuestionModalVisible} onOk={this.handleOkQuestion} onCancel={this.handleCancelQuestion} footer={false}>
+                    {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
+                    <Form
+                      layout="vertical"
+                      onFinish={(value) => this.onQuestionFinish(value, item.gameId)}
+                      onFinishFailed={this.onQuestionFinishFailed}
+                      style={{ marginTop: 20 }}
+                    >
+                      <Form.Item
+                        label="Question"
+                        name="question"
+                        rules={[{ required: true, message: 'Please input question!' }]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <Form.Item>
+                        <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
+                      </Form.Item>
+                    </Form>
+                  </Modal>
+                </>
               )}
             />
           </Col>
         </Row>
         {/* Game modal */}
-        <Modal title="Enter game title" visible={isGameModalVisible} onOk={this.handleOkGame} onCancel={this.handleCancelGame} okText="Ready">
+        <Modal title="Enter game title" visible={isGameModalVisible} onCancel={this.handleCancelGame} footer={false}>
           <Form
             layout="vertical"
-            initialValues={{ title }}
             onFinish={this.onGameFinish}
             onFinishFailed={this.onGameFinishFailed}
           >
@@ -252,55 +316,7 @@ class Games extends PureComponent<Props, State> {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit"><CheckCircleOutlined />Save</Button>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Player modal */}
-        <Modal title="Enter player" visible={isPlayerModalVisible} onOk={this.handleOkPlayer} onCancel={this.handleCancelPlayer} okText="Ready">
-          {players.map(player => <Tag key={player.id}>{player.name}</Tag>)}
-          <Form
-            layout="vertical"
-            initialValues={{ name }}
-            onFinish={this.onPlayerFinish}
-            onFinishFailed={this.onPlayerFinishFailed}
-            style={{ marginTop: 20 }}
-          >
-            <Form.Item
-              label="Name"
-              name="name"
-              rules={[{ required: true, message: 'Please input player name!' }]}
-            >
-              <Input />
-            </Form.Item>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit"><CheckCircleOutlined />Save</Button>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Question modal */}
-        <Modal title="Enter question" visible={isQuestionModalVisible} onOk={this.handleOkQuestion} onCancel={this.handleCancelQuestion} okText="Ready">
-          {questions.map(question => <Tag key={question.id}>{question.title}</Tag>)}
-          <Form
-            layout="vertical"
-            initialValues={{ title: questionGame }}
-            onFinish={this.onQuestionFinish}
-            onFinishFailed={this.onQuestionFinishFailed}
-            style={{ marginTop: 20 }}
-          >
-            <Form.Item
-              label="Question"
-              name="question"
-              rules={[{ required: true, message: 'Please input question!' }]}
-            >
-              <Input />
-            </Form.Item>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit"><CheckCircleOutlined />Save</Button>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
             </Form.Item>
           </Form>
         </Modal>
@@ -315,4 +331,4 @@ function mapStateToProps(state: any) {
   }
 }
 
-export default connect(mapStateToProps, { getGames, createGame, addPlayer, addQuestion })(Games);
+export default connect(mapStateToProps, { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion })(Games);

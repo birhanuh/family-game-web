@@ -17,7 +17,7 @@ module.exports = {
     compress: true,
     disableHostCheck: true,
     historyApiFallback: true,
-    port: 3000,
+    port: 3001,
     overlay: {
       warnings: false,
       errors: true
@@ -76,7 +76,7 @@ module.exports = {
                 'layout-header-height': '100px',
                 'layout-header-color': '#111111',
                 'heading-color': '#111111',
-                'heading-1-size': '64px',
+                'heading-1-size': '96px',
                 'heading-2-size': '48px',
                 'menu-item-color': '#111111',
                 'border-radius-base': '4px',
@@ -85,6 +85,10 @@ module.exports = {
                 // Border color
                 'border-color-base': '#FF9191',
                 'order-color-split': '#FF9191',
+                // Card
+                'card-head-font-size': '48px',
+                // Button
+                'btn-font-weight': '600'
               },
               javascriptEnabled: true,
             },
@@ -92,7 +96,7 @@ module.exports = {
         }],
       },
       {
-        test: /\.(png|svg|jpg|gif)$/,
+        test: /\.(png|svg|jpg|gif|mp3)$/,
         use: ["file-loader"]
       },
       {

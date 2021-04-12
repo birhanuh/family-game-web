@@ -42,7 +42,7 @@ interface Props {
 
 
 class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State> {
-  static countdown: any;
+  countdown: any;
 
   state = {
     seconds: 30,
@@ -94,7 +94,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
   componentWillUnmount = () => {
     // Stop countdown
-    clearInterval(Game.countdown);
+    clearInterval(this.countdown);
   }
 
   handleReset = () => {
@@ -139,7 +139,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     }));
 
     // Start countdown
-    Game.countdown = setInterval(() => {
+    this.countdown = setInterval(() => {
       if (secondsCloned > 0) {
         this.setState((state: State) => ({
           seconds: state.seconds - 1
@@ -201,7 +201,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
     if (currentPlayer.gameId.length !== 0) {
       // Stop countdown
-      clearInterval(Game.countdown);
+      clearInterval(this.countdown);
 
       this.setState(({
         seconds: 30,
@@ -260,16 +260,16 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
                 xs: 1,
                 sm: 2,
                 md: 2,
-                lg: 2,
-                xl: 2,
-                xxl: 2,
+                lg: 4,
+                xl: 4,
+                xxl: 4,
               }}
               className='player-items'
               split={true}
               style={{ textAlign: 'center' }}
               dataSource={game && game.players}
               renderItem={(item: PlayerProp) => (
-                <List.Item style={{ margin: 'auto' }}>
+                <List.Item>
                   <Card title={item.name} bordered={false} className={classnames({
                     "current": item.name === name,
                     "winner": item.name === (winner.name || game.winner.name)

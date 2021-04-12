@@ -48,14 +48,6 @@ module.exports = {
         use: ["style-loader", "css-loader", "sass-loader", "less-loader"]
       },
       {
-        test: /\.(png|svg|jpg|gif|mp3)$/,
-        use: ["file-loader"]
-      },
-      {
-        test: /\.(woff|woff2|eot|ttf|otf)$/,
-        use: ["file-loader"]
-      },
-      {
         loader: 'less-loader', // compiles Less to CSS
         options: {
           lessOptions: { // If you are using less-loader@5 please spread the lessOptions to options directly
@@ -90,6 +82,14 @@ module.exports = {
             javascriptEnabled: true,
           },
         },
+      },
+      {
+        test: /\.(png|svg|jpg|gif|mp3)$/,
+        use: ["file-loader"]
+      },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/,
+        use: ["file-loader"]
       }
     ]
   }

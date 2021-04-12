@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { Form, Input, List, Card, Button, Typography, Col, Row, Tag, Modal, Alert, Badge } from 'antd';
+import { Form, Input, List, Card, Button, Typography, Col, Row, Tag, Modal, Alert, Badge, FormProps } from 'antd';
 import { CheckCircleOutlined, FileUnknownOutlined, PlayCircleOutlined, PlusCircleOutlined, UserAddOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
@@ -27,7 +27,9 @@ interface Props {
   games: [GameProp];
 }
 
-class Games extends PureComponent<Props, State> {
+class Games extends PureComponent<Props & FormProps, State> {
+  formRef: any = React.createRef();
+
   state = {
     currentGame: { gameId: '', title: '', winner: { playerId: '', name: '', score: 0 }, players: [{ playerId: '', name: '', score: 0 }], questions: [{ questionId: '', question: '', isAsked: false }] },
     isGameModalVisible: false,
@@ -68,20 +70,19 @@ class Games extends PureComponent<Props, State> {
   };
 
   onGameFinish = (values: any) => {
-    console.log('Success:', values);
-
     this.setState(({
       isSubmitting: true
     }));
 
     this.props.createGame(values);
 
+    // @ts-ignore
+    this.formRef.current.resetFields();
+
     this.setState(({
       isGameModalVisible: false,
       isSubmitting: false
     }));
-
-    // this.props.form.resetFields()
   };
 
   onGameFinishFailed = (errorInfo: any) => {
@@ -109,13 +110,14 @@ class Games extends PureComponent<Props, State> {
   };
 
   onPlayerFinish = (values: any, gameId: string) => {
-    console.log('Success:', values, gameId);
-
     this.setState(({
       isSubmitting: true
     }));
 
     this.props.addPlayer({ ...values, gameId });
+
+    // @ts-ignore
+    this.formRef.current.resetFields();
 
     this.setState(({
       isSubmitting: false
@@ -127,8 +129,6 @@ class Games extends PureComponent<Props, State> {
   };
 
   deletePlayer = (player: DeletePlayerProp) => {
-    console.log('Id:', player);
-
     this.props.deletePlayer(player);
   };
 
@@ -153,13 +153,14 @@ class Games extends PureComponent<Props, State> {
   };
 
   onQuestionFinish = (values: any, gameId: string) => {
-    console.log('Success:', values);
-
     this.setState(({
       isSubmitting: true
     }));
 
     this.props.addQuestion({ ...values, gameId });
+
+    // @ts-ignore
+    this.formRef.current.resetFields();
 
     this.setState(({
       isSubmitting: false
@@ -171,8 +172,6 @@ class Games extends PureComponent<Props, State> {
   };
 
   deleteQuestion = (question: DeleteQuestionProp) => {
-    console.log('Id:', question);
-
     this.props.deleteQuestion(question);
   };
 
@@ -275,6 +274,7 @@ class Games extends PureComponent<Props, State> {
         <Modal title="Enter game title" visible={isGameModalVisible} onCancel={this.handleCancelGame} footer={false}>
           <Form
             layout="vertical"
+            ref={this.formRef}
             onFinish={this.onGameFinish}
             onFinishFailed={this.onGameFinishFailed}
           >
@@ -296,6 +296,7 @@ class Games extends PureComponent<Props, State> {
           {currentGame.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
           <Form
             layout="vertical"
+            ref={this.formRef}
             onFinish={(value) => this.onPlayerFinish(value, currentGame.gameId)}
             onFinishFailed={this.onPlayerFinishFailed}
             style={{ marginTop: 20 }}
@@ -319,6 +320,7 @@ class Games extends PureComponent<Props, State> {
           {currentGame.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
           <Form
             layout="vertical"
+            ref={this.formRef}
             onFinish={(value) => this.onQuestionFinish(value, currentGame.gameId)}
             onFinishFailed={this.onQuestionFinishFailed}
             style={{ marginTop: 20 }}

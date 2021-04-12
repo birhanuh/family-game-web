@@ -12,8 +12,8 @@ export default function games(state: GameProp[] = [], action = { id: '', type: '
 
     case CREATE_GAME:
       return [
-        ...state,
-        action.game
+        action.game,
+        ...state
       ]
 
     case GET_GAME:

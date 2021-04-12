@@ -82,7 +82,7 @@ export function updateGame(game: UpdateGameProp) {
 export function resetGame(id: string) {
   return (dispatch: any) => {
     return axios.put(`${process.env.API_URL}/games/${id}/reset`).then(res => {
-      dispatch(resetGameAction(res.data))
+      dispatch(resetGameAction(res.data.Attributes))
     })
   }
 }

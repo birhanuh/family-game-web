@@ -10,9 +10,10 @@ import classnames from "classnames";
 const { Title } = Typography;
 
 interface State {
-  isGameModalVisible: boolean,
-  isPlayerModalVisible: boolean,
-  isQuestionModalVisible: boolean,
+  currentGame: GameProp;
+  isGameModalVisible: boolean;
+  isPlayerModalVisible: boolean;
+  isQuestionModalVisible: boolean;
   isSubmitting: boolean;
 }
 
@@ -28,6 +29,7 @@ interface Props {
 
 class Games extends PureComponent<Props, State> {
   state = {
+    currentGame: { gameId: '', title: '', winner: { playerId: '', name: '', score: 0 }, players: [{ playerId: '', name: '', score: 0 }], questions: [{ questionId: '', question: '', isAsked: false }] },
     isGameModalVisible: false,
     isPlayerModalVisible: false,
     isQuestionModalVisible: false,
@@ -36,6 +38,20 @@ class Games extends PureComponent<Props, State> {
 
   componentDidMount() {
     this.props.getGames();
+  }
+
+  UNSAFE_componentWillReceiveProps = (nextProps: any) => {
+    if (nextProps.games) {
+      const { games } = nextProps;
+
+      games.map((game: GameProp) => {
+        if (game.gameId === this.state.currentGame.gameId) {
+          this.setState(({
+            currentGame: game
+          }));
+        }
+      });
+    }
   }
 
   // Game
@@ -73,8 +89,9 @@ class Games extends PureComponent<Props, State> {
   };
 
   // Player
-  handlePlayer = () => {
+  handlePlayer = (game: GameProp) => {
     this.setState(({
+      currentGame: game,
       isPlayerModalVisible: true
     }));
   };
@@ -116,8 +133,9 @@ class Games extends PureComponent<Props, State> {
   };
 
   // Question
-  handleQuestion = () => {
+  handleQuestion = (game: GameProp) => {
     this.setState(({
+      currentGame: game,
       isQuestionModalVisible: true
     }));
   };
@@ -159,7 +177,7 @@ class Games extends PureComponent<Props, State> {
   };
 
   render() {
-    const { isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = this.state;
+    const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = this.state;
 
     const { games } = this.props;
 
@@ -201,101 +219,54 @@ class Games extends PureComponent<Props, State> {
               locale={{ emptyText: <EmptyListAlert /> }}
               dataSource={games}
               renderItem={(item: GameProp) => (
-                <>
-                  <List.Item>
-                    <Badge.Ribbon className={classnames("seconds", {
-                      "no-winner": Object.keys(item.winner).length == 0
-                    })} text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}>
-                      <Card title={item.title} bordered={false}>
-                        {(item.players.length > item.questions.length && <Alert
-                          message="Number of Players should not be more than Questions"
-                          type="error"
-                          showIcon={true}
-                        />) || (item.players.length === 0 && item.questions.length === 0 && <Alert
-                          message="Add Players and Questions to start playing"
-                          type="error"
-                          showIcon={true}
-                        />) || (item.questions.length % item.players.length !== 0 && <Alert
-                          message="Number of Questions needs to be equally divided with number of Player"
-                          type="error"
-                          showIcon={true}
-                        />)}
-                        <Row>
-                          <Col xs={24} sm={24} md={16} lg={16} xl={16}>
-                            <div className="questions-section">
-                              <div className="tags">
-                                {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
-                              </div>
-                              <Button type='primary' size='small' className='add-question-btn' disabled={isSubmitting} onClick={() => this.handleQuestion()}><FileUnknownOutlined />Add question</Button>
+                <List.Item>
+                  <Badge.Ribbon className={classnames("seconds", {
+                    "no-winner": Object.keys(item.winner).length == 0
+                  })} text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}>
+                    <Card title={item.title} bordered={false}>
+                      {(item.players.length > item.questions.length && <Alert
+                        message="Number of Players should not be more than Questions"
+                        type="error"
+                        showIcon={true}
+                      />) || (item.players.length === 0 && item.questions.length === 0 && <Alert
+                        message="Add Players and Questions to start playing"
+                        type="error"
+                        showIcon={true}
+                      />) || (item.questions.length % item.players.length !== 0 && <Alert
+                        message="Number of Questions needs to be equally divided with number of Player"
+                        type="error"
+                        showIcon={true}
+                      />)}
+                      <Row>
+                        <Col xs={24} sm={24} md={16} lg={16} xl={16}>
+                          <div className="questions-section">
+                            <div className="tags">
+                              {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
                             </div>
-                          </Col>
-                          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-                            <div className="players-section">
-                              <div className="tags">
-                                {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
-                              </div>
-                              <Button type='primary' size='small' className='add-player-btn' disabled={isSubmitting} onClick={() => this.handlePlayer()}><UserAddOutlined />Add player</Button>
+                            <Button type='primary' size='small' className='add-question-btn' disabled={isSubmitting} onClick={() => this.handleQuestion(item)}><FileUnknownOutlined />Add question</Button>
+                          </div>
+                        </Col>
+                        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                          <div className="players-section">
+                            <div className="tags">
+                              {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
                             </div>
-                          </Col>
-                        </Row>
-                        <Row justify='center'>
-                          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-                            <Link className={classnames("ant-btn ant-btn-block play-btn", {
-                              "disabled": (item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0)
-                            })}
-                              to={(item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0) ? '' :
-                                `games/${item.gameId}`} ><PlayCircleOutlined /><span>{`Play ${item.title}`}</span></Link>
-                          </Col>
-                        </Row>
-                      </Card>
-                    </Badge.Ribbon>
-                  </List.Item>
-                  {/* Player modal */}
-                  <Modal title="Enter player" visible={isPlayerModalVisible} onOk={this.handleOkPlayer} onCancel={this.handleCancelPlayer} footer={false}>
-                    {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
-                    <Form
-                      layout="vertical"
-                      onFinish={(value) => this.onPlayerFinish(value, item.gameId)}
-                      onFinishFailed={this.onPlayerFinishFailed}
-                      style={{ marginTop: 20 }}
-                    >
-                      <Form.Item
-                        label="Name"
-                        name="name"
-                        rules={[{ required: true, message: 'Please input player name!' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-
-                      <Form.Item>
-                        <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
-                      </Form.Item>
-                    </Form>
-                  </Modal>
-
-                  {/* Question modal */}
-                  <Modal title="Enter question" visible={isQuestionModalVisible} onOk={this.handleOkQuestion} onCancel={this.handleCancelQuestion} footer={false}>
-                    {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
-                    <Form
-                      layout="vertical"
-                      onFinish={(value) => this.onQuestionFinish(value, item.gameId)}
-                      onFinishFailed={this.onQuestionFinishFailed}
-                      style={{ marginTop: 20 }}
-                    >
-                      <Form.Item
-                        label="Question"
-                        name="question"
-                        rules={[{ required: true, message: 'Please input question!' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-
-                      <Form.Item>
-                        <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
-                      </Form.Item>
-                    </Form>
-                  </Modal>
-                </>
+                            <Button type='primary' size='small' className='add-player-btn' disabled={isSubmitting} onClick={() => this.handlePlayer(item)}><UserAddOutlined />Add player</Button>
+                          </div>
+                        </Col>
+                      </Row>
+                      <Row justify='center'>
+                        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                          <Link className={classnames("ant-btn ant-btn-block play-btn", {
+                            "disabled": (item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0)
+                          })}
+                            to={(item.players.length > item.questions.length) || (item.players.length === 0 && item.questions.length === 0) || (item.questions.length % item.players.length !== 0) ? '' :
+                              `games/${item.gameId}`} ><PlayCircleOutlined /><span>{`Play ${item.title}`}</span></Link>
+                        </Col>
+                      </Row>
+                    </Card>
+                  </Badge.Ribbon>
+                </List.Item>
               )}
             />
           </Col>
@@ -311,6 +282,51 @@ class Games extends PureComponent<Props, State> {
               label="Game"
               name="title"
               rules={[{ required: true, message: 'Please input game title!' }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+        {/* Player modal */}
+        <Modal title="Enter player" visible={isPlayerModalVisible} onOk={this.handleOkPlayer} onCancel={this.handleCancelPlayer} footer={false}>
+          {currentGame.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
+          <Form
+            layout="vertical"
+            onFinish={(value) => this.onPlayerFinish(value, currentGame.gameId)}
+            onFinishFailed={this.onPlayerFinishFailed}
+            style={{ marginTop: 20 }}
+          >
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: 'Please input player name!' }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}><CheckCircleOutlined />Save</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Question modal */}
+        <Modal title="Enter question" visible={isQuestionModalVisible} onOk={this.handleOkQuestion} onCancel={this.handleCancelQuestion} footer={false}>
+          {currentGame.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
+          <Form
+            layout="vertical"
+            onFinish={(value) => this.onQuestionFinish(value, currentGame.gameId)}
+            onFinishFailed={this.onQuestionFinishFailed}
+            style={{ marginTop: 20 }}
+          >
+            <Form.Item
+              label="Question"
+              name="question"
+              rules={[{ required: true, message: 'Please input question!' }]}
             >
               <Input />
             </Form.Item>

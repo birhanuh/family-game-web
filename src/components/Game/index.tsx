@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { Button, Card, Col, Row, List, Typography, Modal, Divider, Radio, Alert } from 'antd';
+import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert } from 'antd';
 import { CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
@@ -9,6 +9,7 @@ import { RouteComponentProps } from "react-router";
 import classnames from "classnames";
 
 const cling = require('../../audios/cling.mp3');
+const clingAudio = new Audio(cling);
 
 const { Title } = Typography;
 
@@ -21,7 +22,7 @@ interface State {
   currentPlayer: PlayerProp;
   winner: PlayerProp;
   isConfirmationModalVisible: boolean;
-  prevPlayerIndex: number;
+  nextPlayerIndex: number;
   noCurrentPlayerError: boolean;
 }
 
@@ -38,7 +39,11 @@ interface Props {
   game: GameProp;
 }
 
+
+
 class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State> {
+  static countdown: any;
+
   state = {
     seconds: 30,
     isGameActive: false,
@@ -48,7 +53,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     currentPlayer: { gameId: '', playerId: '', name: '', score: 0 },
     winner: { gameId: '', playerId: '', name: '', score: 0 },
     isConfirmationModalVisible: false,
-    prevPlayerIndex: 0,
+    nextPlayerIndex: 0,
     noCurrentPlayerError: false
   }
 
@@ -87,10 +92,20 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     }
   }
 
+  componentWillUnmount = () => {
+    // Stop countdown
+    clearInterval(Game.countdown);
+  }
+
   handleReset = () => {
     const { gameId } = this.props.game;
 
     this.props.resetGame(gameId);
+
+    // Active game back
+    this.setState(({
+      isGameOver: false
+    }));
   }
 
   handleStart = () => {
@@ -99,44 +114,48 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
       isGameActive: true,
       noCurrentPlayerError: false
     }));
+
     let secondsCloned = 30;
 
     const { game: { gameId, players, questions } } = this.props;
-    const { prevPlayerIndex } = this.state;
+    const { nextPlayerIndex } = this.state;
 
     // Pick current Player
-    const currentPlayer = players[prevPlayerIndex] ? players[prevPlayerIndex] : players[0];
+    const currentPlayer = players[nextPlayerIndex] ? players[nextPlayerIndex] : players[0];
 
-    this.setState((state: State) => ({
+    this.setState(({
       currentPlayer: { gameId, ...currentPlayer },
-      prevPlayerIndex: state.prevPlayerIndex + 1
+      nextPlayerIndex: players.indexOf(currentPlayer) + 1
     }));
 
-    // Pick current Question
-    const random = Math.floor(Math.random() * questions.length);
-
     const questionsFiltered = questions.filter(question => !question.isAsked);
+    // Pick current Question
+    const random = Math.floor(Math.random() * questionsFiltered.length);
 
     const currentQuestion = questionsFiltered[random];
+
     this.setState(({
       currentQuestion: { gameId, ...currentQuestion },
     }));
 
     // Start countdown
-    setInterval(() => {
+    Game.countdown = setInterval(() => {
       if (secondsCloned > 0) {
         this.setState((state: State) => ({
           seconds: state.seconds - 1
         }));
 
         secondsCloned = secondsCloned - 1;
+
+        // Play audio
+        if (secondsCloned < 6) {
+          // cling
+          clingAudio.play();
+        }
       } else if (secondsCloned === 0) {
         this.handleConfirmationModal();
 
         secondsCloned = -1;
-      } else if (secondsCloned < 6) {
-        // cling
-        cling;
       }
     }, 1000);
   }
@@ -172,15 +191,26 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     }));
   }
 
-  handleEditScore = (e: any) => {
-    const { currentPlayer } = this.state;
+  handleEditScoreMinus = (passedPlayer: PlayerProp) => {
+    const { game: { gameId } } = this.props;
+    this.props.updatePlayer({ gameId, ...passedPlayer, score: passedPlayer.score - 1 });
+  };
+
+  handleEditScorePlus = () => {
+    const { currentPlayer, currentQuestion } = this.state;
 
     if (currentPlayer.gameId.length !== 0) {
-      if (e.target.value === 'minus') {
-        this.props.updatePlayer({ ...currentPlayer, score: currentPlayer.score - 1 });
-      } else if (e.target.value === 'plus') {
-        this.props.updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
-      }
+      // Stop countdown
+      clearInterval(Game.countdown);
+
+      this.setState(({
+        seconds: 30,
+        isGameActive: false,
+      }));
+
+      this.props.updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
+
+      this.props.updateQuestion({ ...currentQuestion, isAsked: true });
     } else {
       this.setState(({
         noCurrentPlayerError: true,
@@ -189,7 +219,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
   };
 
   render() {
-    const { seconds, currentPlayer: { name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
+    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
 
     const { game } = this.props;
 
@@ -245,10 +275,10 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
                     "winner": item.name === (winner.name || game.winner.name)
                   })}>
                     <Title level={2} className='score' >{item.score}</Title>
-                    <Radio.Group onChange={this.handleEditScore}>
-                      <Radio.Button value="minus"><MinusCircleOutlined /></Radio.Button>
-                      <Radio.Button value="plus"><PlusCircleOutlined /></Radio.Button>
-                    </Radio.Group>
+                    <div>
+                      <Button type='ghost' size='large' onClick={() => this.handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
+                      {item.playerId === playerId && <Button type='ghost' size='large' onClick={() => this.handleEditScorePlus()}><PlusCircleOutlined /></Button>}
+                    </div>
                   </Card>
                 </List.Item>
               )}
@@ -266,7 +296,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
         </Row>
 
         {/* Confirmation modal */}
-        <Modal className='game' title={<Title level={4}>Has the player answered the question?</Title>} visible={isConfirmationModalVisible} footer={false}>
+        <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} visible={isConfirmationModalVisible} footer={false} closable={false}>
 
           <Button type='primary' className='success-btn' block={true} onClick={() => this.handleYes()}><CheckOutlined />Yes</Button>
 

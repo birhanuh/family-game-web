@@ -106,6 +106,9 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     this.setState(({
       isGameOver: false
     }));
+
+    // Reset nextPlayerIndex
+    localStorage.setItem(gameId, '0');
   }
 
   handleStart = () => {
@@ -121,12 +124,18 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     const { nextPlayerIndex } = this.state;
 
     // Pick current Player
-    const currentPlayer = players[nextPlayerIndex] ? players[nextPlayerIndex] : players[0];
+    const nextPlayerIndexFromStorage = localStorage.getItem(gameId);
+    const nextPlayerIndexDrived = nextPlayerIndexFromStorage && nextPlayerIndexFromStorage.length > 0 ? parseInt(nextPlayerIndexFromStorage) : nextPlayerIndex;
+
+    const currentPlayer = players[nextPlayerIndexDrived] ? players[nextPlayerIndexDrived] : players[0];
 
     this.setState(({
       currentPlayer: { gameId, ...currentPlayer },
       nextPlayerIndex: players.indexOf(currentPlayer) + 1
     }));
+
+    // Save nextPlayerIndex to storage for page refresh
+    localStorage.setItem(gameId, (players.indexOf(currentPlayer) + 1).toString());
 
     const questionsFiltered = questions.filter(question => !question.isAsked);
     // Pick current Question

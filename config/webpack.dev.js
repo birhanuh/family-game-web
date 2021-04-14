@@ -56,8 +56,9 @@ module.exports = {
           loader: 'style-loader'
         }, {
           loader: 'css-loader', // translates CSS into CommonJS
+        }, {
+          loader: 'sass-loader'
         },
-        { loader: 'sass-loader' },
         {
           loader: 'less-loader', // compiles Less to CSS
           options: {
@@ -88,7 +89,8 @@ module.exports = {
                 // Card
                 'card-head-font-size': '48px',
                 // Button
-                'btn-font-weight': '600'
+                'btn-font-weight': '600',
+                'error-color': '#ee1911'
               },
               javascriptEnabled: true,
             },

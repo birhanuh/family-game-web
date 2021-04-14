@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert } from 'antd';
+import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, PageHeader } from 'antd';
 import { CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
@@ -19,6 +19,9 @@ const myConfetti = confetti.create(myCanvas, {
 const cling = require('../../audios/cling.mp3');
 const clingAudio = new Audio(cling);
 
+const confettiA = require('../../audios/confetti.mp3');
+const confettiAudio = new Audio(confettiA);
+
 const { Title } = Typography;
 
 interface State {
@@ -32,7 +35,6 @@ interface State {
   isConfirmationModalVisible: boolean;
   nextPlayerIndex: number;
   noCurrentPlayerError: boolean;
-  isDraw: boolean;
 }
 
 interface MatchParams {
@@ -63,8 +65,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     winner: { gameId: '', playerId: '', name: '', score: 0 },
     isConfirmationModalVisible: false,
     nextPlayerIndex: 0,
-    noCurrentPlayerError: false,
-    isDraw: false
+    noCurrentPlayerError: false
   }
 
   componentDidMount = async () => {
@@ -88,33 +89,26 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
         }));
 
         if (Object.keys(winner).length === 0) {
-          const winnerPlayer = players.reduce(function (prev: PlayerProp, current: PlayerProp) {
-            return (prev.score > current.score) ? prev : current
+          const maxScore = players.reduce((prev: PlayerProp, current: PlayerProp) => {
+            return (prev.score > current.score) ? prev.score : current.score
           });
 
-          this.props.updateGame({ gameId, title, winner: winnerPlayer });
+          // Calculate draw
+          const winners = players.filter((player: PlayerProp) => player.score === maxScore && player);
 
-          this.setState(({
-            winner: winnerPlayer
-          }));
+          if (winners.length === 1) {
+            this.props.updateGame({ gameId, title, winner: winners[0] });
 
-          myConfetti();
-        }
+            this.setState(({
+              winner: winners[0]
+            }));
 
-        // Calculate draw
-        let isStillDraw = false;
-        let prevPlayer: PlayerProp;
+            // Play confetti
+            confettiAudio.play();
 
-        players.map((player: PlayerProp) => {
-          if (prevPlayer) {
-            isStillDraw = prevPlayer.score === player.score
+            myConfetti();
           }
-          prevPlayer = player;
-        });
-
-        this.setState(({
-          isDraw: isStillDraw
-        }));
+        }
       }
     }
   }
@@ -131,8 +125,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
     // Active game back
     this.setState(({
-      isGameOver: false,
-      isDraw: false
+      isGameOver: false
     }));
 
     // Reset nextPlayerIndex
@@ -184,7 +177,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
         secondsCloned = secondsCloned - 1;
 
-        // Play audio
+        // Play cling
         if (secondsCloned < 6) {
           // cling
           clingAudio.play();
@@ -256,17 +249,22 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
   };
 
   render() {
-    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isDraw, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
+    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
 
-    const { game } = this.props;
+    const { game, history } = this.props;
 
     return (
       <>
         <Row
           justify="center"
-          style={{ display: 'flex', marginTop: 12, textAlign: 'right' }}
+          style={{ display: 'flex', textAlign: 'right' }}
         >
-          <Col xs={24} sm={24} md={24} lg={24} xl={20} className='reset-game'>
+          <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
+            <PageHeader
+              className="site-page-header"
+              onBack={() => history.push('/')}
+              title="Back to games"
+            />
             <Button type='dashed' className='reset-btn' onClick={() => this.handleReset()}><RedoOutlined />Reset</Button>
           </Col>
         </Row>
@@ -313,7 +311,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
                   <Card title={item.name} bordered={false} className={classnames({
                     "current": item.name === name,
-                    "winner": (item.name === (winner.name || game.winner.name)) || isDraw
+                    "winner": (item.name === (winner.name || game.winner.name))
                   })}>
                     <Title level={2} className='score' >{item.score}</Title>
                     <div>

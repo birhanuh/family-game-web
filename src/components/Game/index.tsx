@@ -7,6 +7,14 @@ import { getGame } from '../../actions/game'
 import { updateGame, updatePlayer, updateQuestion, resetGame } from '../../actions/game'
 import { RouteComponentProps } from "react-router";
 import classnames from "classnames";
+import confetti from "canvas-confetti";
+
+const myCanvas: any = document.getElementById('canvas');
+
+const myConfetti = confetti.create(myCanvas, {
+  resize: true,
+  useWorker: true,
+});
 
 const cling = require('../../audios/cling.mp3');
 const clingAudio = new Audio(cling);
@@ -24,6 +32,7 @@ interface State {
   isConfirmationModalVisible: boolean;
   nextPlayerIndex: number;
   noCurrentPlayerError: boolean;
+  isDraw: boolean;
 }
 
 interface MatchParams {
@@ -54,7 +63,8 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     winner: { gameId: '', playerId: '', name: '', score: 0 },
     isConfirmationModalVisible: false,
     nextPlayerIndex: 0,
-    noCurrentPlayerError: false
+    noCurrentPlayerError: false,
+    isDraw: false
   }
 
   componentDidMount = async () => {
@@ -87,7 +97,24 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
           this.setState(({
             winner: winnerPlayer
           }));
+
+          myConfetti();
         }
+
+        // Calculate draw
+        let isStillDraw = false;
+        let prevPlayer: PlayerProp;
+
+        players.map((player: PlayerProp) => {
+          if (prevPlayer) {
+            isStillDraw = prevPlayer.score === player.score
+          }
+          prevPlayer = player;
+        });
+
+        this.setState(({
+          isDraw: isStillDraw
+        }));
       }
     }
   }
@@ -104,7 +131,8 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
     // Active game back
     this.setState(({
-      isGameOver: false
+      isGameOver: false,
+      isDraw: false
     }));
 
     // Reset nextPlayerIndex
@@ -228,7 +256,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
   };
 
   render() {
-    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
+    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isDraw, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
 
     const { game } = this.props;
 
@@ -263,6 +291,9 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
               type="error"
               showIcon={true}
             />}
+            {/* Confetti for winner player */}
+            <canvas id='canvas' style={{ height: 0 }} />
+
             <List
               grid={{
                 gutter: 48,
@@ -279,9 +310,10 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
               dataSource={game && game.players}
               renderItem={(item: PlayerProp) => (
                 <List.Item>
+
                   <Card title={item.name} bordered={false} className={classnames({
                     "current": item.name === name,
-                    "winner": item.name === (winner.name || game.winner.name)
+                    "winner": (item.name === (winner.name || game.winner.name)) || isDraw
                   })}>
                     <Title level={2} className='score' >{item.score}</Title>
                     <div>

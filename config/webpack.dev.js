@@ -87,7 +87,7 @@ module.exports = {
                 'border-color-base': '#FF9191',
                 'order-color-split': '#FF9191',
                 // Card
-                'card-head-font-size': '48px',
+                'card-head-font-size': '36px',
                 // Button
                 'btn-font-weight': '600',
                 'error-color': '#ee1911'

@@ -23,8 +23,8 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify("production"),
-      "process.env.CLIENT_URL": JSON.stringify("http://localhost:3000"),
-      "process.env.API_URL": JSON.stringify("http://localhost:3000/dev")
+      "process.env.CLIENT_URL": JSON.stringify("https://family-game.netlify.app"),
+      "process.env.API_URL": JSON.stringify("https://fbbmsgqmue.execute-api.eu-west-1.amazonaws.com/dev")
     })
   ],
   output: {
@@ -80,7 +80,7 @@ module.exports = {
                 'border-color-base': '#FF9191',
                 'order-color-split': '#FF9191',
                 // Card
-                'card-head-font-size': '48px',
+                'card-head-font-size': '36px',
                 // Button
                 'btn-font-weight': '600',
                 'error-color': '#ee1911'

@@ -182,8 +182,8 @@ class Games extends PureComponent<Props & FormProps, State> {
 
     const EmptyListAlert = () => (<Alert
       style={{ marginTop: 20, marginBottom: 20 }}
-      message="Currently here are no games yet"
-      description="Currently here are no games yet"
+      message="Currently there are no games to display"
+      description="Currently there are no games to display"
       type="info"
       showIcon={true}
     />)

@@ -182,8 +182,8 @@ class Games extends PureComponent<Props & FormProps, State> {
 
     const EmptyListAlert = () => (<Alert
       style={{ marginTop: 20, marginBottom: 20 }}
-      message="Currently there are no games to display"
-      description="Currently there are no games to display"
+      message="Tällä hetkellä ei ole näytettäviä pelejä"
+      description="Tällä hetkellä ei ole näytettäviä pelejä"
       type="info"
       showIcon={true}
     />)
@@ -194,8 +194,8 @@ class Games extends PureComponent<Props & FormProps, State> {
           className="games-heading"
           style={{ textAlign: 'center' }}>
           <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-            <Title level={3}>Welcom to FamilyGames! Create game by clicking the "Create game" button bellow.</Title>
-            <Button type='primary' size="large" onClick={() => this.handleGame()}><PlusCircleOutlined />Create game</Button>
+            <Title level={3}>Tervetuloa perhepeleihin! Luo peli napsauttamalla "Luo peli" -painiketta.</Title>
+            <Button type='primary' size="large" onClick={() => this.handleGame()}><PlusCircleOutlined />Luo peli</Button>
           </Col>
         </Row>
         <Row
@@ -228,11 +228,11 @@ class Games extends PureComponent<Props & FormProps, State> {
                         type="error"
                         showIcon={true}
                       />) || (item.players.length === 0 && item.questions.length === 0 && <Alert
-                        message="Add Players and Questions to start playing"
+                        message="Lisää pelaajia ja kysymyksiä aloittaaksesi pelaamisen"
                         type="error"
                         showIcon={true}
                       />) || (item.questions.length % item.players.length !== 0 && <Alert
-                        message="Number of Questions needs to be equally divided with number of Player"
+                        message="Kysymysten määrä on jaettava tasan pelaajan lukumäärään"
                         type="error"
                         showIcon={true}
                       />)}
@@ -242,7 +242,7 @@ class Games extends PureComponent<Props & FormProps, State> {
                             <div className="tags">
                               {item.questions.map(question => <Tag key={question.questionId} closable={true} onClose={() => this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })}>{question.question}</Tag>)}
                             </div>
-                            <Button type='primary' size='small' className='add-question-btn' disabled={isSubmitting} onClick={() => this.handleQuestion(item)}><FileUnknownOutlined />Add question</Button>
+                            <Button type='primary' size='small' className='add-question-btn' disabled={isSubmitting} onClick={() => this.handleQuestion(item)}><FileUnknownOutlined />Lisää kysymys</Button>
                           </div>
                         </Col>
                         <Col xs={24} sm={24} md={8} lg={8} xl={8}>
@@ -250,7 +250,7 @@ class Games extends PureComponent<Props & FormProps, State> {
                             <div className="tags">
                               {item.players.map(player => <Tag key={player.playerId} closable={true} onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}>{player.name}</Tag>)}
                             </div>
-                            <Button type='primary' size='small' className='add-player-btn' disabled={isSubmitting} onClick={() => this.handlePlayer(item)}><UserAddOutlined />Add player</Button>
+                            <Button type='primary' size='small' className='add-player-btn' disabled={isSubmitting} onClick={() => this.handlePlayer(item)}><UserAddOutlined />Lisää pelaaja</Button>
                           </div>
                         </Col>
                       </Row>

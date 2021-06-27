@@ -24,7 +24,7 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify("production"),
       "process.env.CLIENT_URL": JSON.stringify("https://family-game.netlify.app"),
-      "process.env.API_URL": JSON.stringify("https://fbbmsgqmue.execute-api.eu-west-1.amazonaws.com/dev")
+      "process.env.API_URL": JSON.stringify("https://dvh2cdgel6.execute-api.eu-west-1.amazonaws.com/dev")
     })
   ],
   output: {

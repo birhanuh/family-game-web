@@ -1,4 +1,6 @@
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -29,9 +31,13 @@ html, body, #root {
 // Card
 .ant-card {
   box-shadow: 0 1px 2px -2px rgb(248 66 66 / 16%), 0 3px 6px 0 rgb(248 66 66 / 12%), 0 5px 12px 4px rgb(248 66 66 / 9%);
+
+  .ant-card-head-title {
+    text-transform: uppercase;
+  }
 }
 
-// Alert 
+// Alert
 .ant-alert {
   margin-bottom: 16px;
 }
@@ -39,7 +45,8 @@ html, body, #root {
 .ant-alert-error {
   background-color: rgba(@error, 0.75);
   border: 1px solid rgba(@error, 0.75);
-  .ant-alert-message, .ant-alert-icon {
+  .ant-alert-message,
+  .ant-alert-icon {
     color: #fff;
   }
 }
@@ -97,7 +104,8 @@ html, body, #root {
   }
 }
 
-.ant-btn.add-player-btn, .ant-btn.add-question-btn {
+.ant-btn.add-player-btn,
+.ant-btn.add-question-btn {
   color: #ffffff;
   background-color: @yellow;
   border-color: @yellow;
@@ -106,7 +114,8 @@ html, body, #root {
   }
 }
 
-.questions-section, .players-section{
+.questions-section,
+.players-section {
   padding: 12px;
   margin-bottom: 24px;
   border: 1px dashed @border-color-base;
@@ -114,8 +123,12 @@ html, body, #root {
 
 .questions-section {
   margin-right: 16px;
-}
 
+  .ant-tag-question {
+    filter: blur(4px);
+    display: inline-block;
+  }
+}
 
 .tags {
   margin-bottom: 16px;
@@ -124,7 +137,8 @@ html, body, #root {
   }
 }
 
-.tags, .ant-modal-content {
+.tags,
+.ant-modal-content {
   span.ant-tag {
     margin: 6px;
   }
@@ -143,7 +157,7 @@ html, body, #root {
 .ant-btn.success-btn.ant-btn-primary[disabled] {
   color: rgba(0, 0, 0, 0.25);
   background: #f5f5f5;
-  border-color: #FF9191;
+  border-color: #ff9191;
 }
 
 .question-seconds {
@@ -159,7 +173,8 @@ html, body, #root {
   h2.ant-typography.seconds.orange {
     color: @orange;
   }
-  h1.ant-typography, h2.ant-typography {
+  h1.ant-typography,
+  h2.ant-typography {
     margin: 0;
   }
 }
@@ -200,6 +215,6 @@ html, body, #root {
 .logo {
   width: 60px;
   height: 60px;
-  background: url("../images/logo.png") center center no-repeat;
+  background: url('../images/logo.png') center center no-repeat;
   background-size: contain;
 }

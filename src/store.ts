@@ -1,11 +1,13 @@
-import { applyMiddleware, createStore } from "redux";
-import thunk from "redux-thunk";
-import { composeWithDevTools } from "redux-devtools-extension";
 
-import rootReducer from "./reducers/rootReducer";
+import { configureStore } from '@reduxjs/toolkit'
 
-export default createStore(
-  rootReducer, /* preloadedState, */
-  composeWithDevTools(applyMiddleware(thunk))
-);
+
+import { gameReducer } from "./reducers/games";
+
+export const store = configureStore({
+  reducer: {
+    games: gameReducer as any,
+  }
+})
+
 

@@ -1,29 +1,49 @@
-import React, { PureComponent } from "react";
-import { Link, RouteComponentProps, withRouter } from "react-router-dom";
-import classnames from "classnames";
-import { Menu, Layout } from "antd";
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, Layout, MenuProps } from "antd";
 import { PlayCircleOutlined } from "@ant-design/icons";
 
 const { Header } = Layout;
 
-class HeaderPage extends PureComponent<RouteComponentProps> {
-  render() {
-    return (
-      <Header>
-        <Link to="/">
-          <div className="logo" />
-        </Link>
-        <Menu mode="horizontal">
-          <Menu.Item key="games" className={classnames({
-            "ant-menu-item-selected": this.props.location.pathname === '/' || this.props.location.pathname.startsWith('/games')
-          })} >
-            <PlayCircleOutlined key="games" />
-            <Link to="/">Games</Link>
-          </Menu.Item>
-        </Menu>
-      </Header>
-    );
-  }
-}
+type MenuItem = Required<MenuProps>['items'][number];
 
-export default withRouter(HeaderPage);
+const items: MenuItem[] = [
+  {
+    label: 'Games',
+    key: 'games',
+    icon:  <PlayCircleOutlined key="games" />,
+  },
+  // {
+  //   label: 'Navigation Two',
+  //   key: 'app',
+  //   icon: <AppstoreOutlined />,
+  //   disabled: true,
+  // },
+  // {
+  //   key: 'alipay',
+  //   label: (
+  //     <a href="https://ant.design" target="_blank" rel="noopener noreferrer">
+  //       Navigation Four - Link
+  //     </a>
+  //   ),
+  // },
+];
+
+export const HeaderPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  // const params = useParams();
+
+  const onClick: MenuProps['onClick'] = () => {
+    navigate('/');
+  };
+
+  return (
+    <Header>
+      <Link to="/" className="logo"> 
+        <div className="logo" />
+      </Link>
+      <Menu onClick={onClick} selectedKeys={[ location.pathname === '/' || location.pathname?.startsWith('/games') ? 'games' : '']} mode="horizontal" items={items} />
+    </Header>
+  );
+}

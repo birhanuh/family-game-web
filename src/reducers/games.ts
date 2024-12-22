@@ -4,7 +4,7 @@ import {
   ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION,
 } from '../actions/types'
 
-export default function games(state: GameProp[] = [], action = { id: '', type: '', games: [], game: { gameId: '' }, player: { gameId: '', playerId: '', name: '', score: 0 }, question: { gameId: '', questionId: '', question: '', isAsked: false } }) {
+export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '', games: [], game: { gameId: '', title: '',  }, player: { gameId: '', playerId: '', name: '', score: 0 }, question: { gameId: '', questionId: '', question: '', isAsked: false } })=> {
   switch (action.type) {
 
     case GET_GAMES:

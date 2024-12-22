@@ -22,7 +22,7 @@ import {
   PlusCircleOutlined,
   UsergroupAddOutlined,
 } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion } from '../../actions/game';
 import { DeletePlayerProp, DeleteQuestionProp, GameProp, PlayerProp, QuestionProp } from '../../actions/types';
@@ -48,7 +48,7 @@ interface Props {
   games: [GameProp];
 }
 
-class Games extends PureComponent<Props & FormProps, State> {
+class Games extends PureComponent<Props & FormProps, State> {  
   formRef: any = React.createRef();
 
   state = {
@@ -67,6 +67,8 @@ class Games extends PureComponent<Props & FormProps, State> {
 
   componentDidMount() {
     this.props.getGames();
+    console.log('L: ',  this.props.getGames());
+    
   }
 
   UNSAFE_componentWillReceiveProps = (nextProps: any) => {
@@ -202,6 +204,12 @@ class Games extends PureComponent<Props & FormProps, State> {
     this.props.deleteQuestion(question);
   };
 
+  handleOnClick = (item: any) => {
+    const navigate = useNavigate();
+
+    navigate( `games/${item.gameId}`)
+  };
+
   render() {
     const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = this.state;
 
@@ -251,7 +259,7 @@ class Games extends PureComponent<Props & FormProps, State> {
                     })}
                     text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}
                   >
-                    <Card title={item.title} bordered={false}>
+                    <Card title={item.title}>
                       {(item.players.length > item.questions.length && (
                         <Alert
                           message="Number of Players should not be more than Questions"
@@ -329,24 +337,17 @@ class Games extends PureComponent<Props & FormProps, State> {
                       </Row>
                       <Row justify="center">
                         <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-                          <Link
-                            className={classnames('ant-btn ant-btn-block play-btn', {
-                              disabled:
-                                item.players.length > item.questions.length ||
-                                (item.players.length === 0 && item.questions.length === 0) ||
-                                item.questions.length % item.players.length !== 0,
-                            })}
-                            to={
-                              item.players.length > item.questions.length ||
-                              (item.players.length === 0 && item.questions.length === 0) ||
-                              item.questions.length % item.players.length !== 0
-                                ? ''
-                                : `games/${item.gameId}`
-                            }
+                          <Button
+                          block
+                          type='default'
+                          disabled={ item.players.length > item.questions.length ||
+                            (item.players.length === 0 && item.questions.length === 0) ||
+                            item.questions.length % item.players.length !== 0}
+                            onClick={() => this.handleOnClick(item)}
                           >
                             <PlayCircleOutlined />
                             <span>{`Play ${item.title}`}</span>
-                          </Link>
+                          </Button>
                         </Col>
                       </Row>
                     </Card>
@@ -357,7 +358,7 @@ class Games extends PureComponent<Props & FormProps, State> {
           </Col>
         </Row>
         {/* Game modal */}
-        <Modal title="Enter game title" visible={isGameModalVisible} onCancel={this.handleCancelGame} footer={false}>
+        <Modal title="Enter game title" open={isGameModalVisible} onCancel={this.handleCancelGame} footer={false}>
           <Form
             layout="vertical"
             ref={this.formRef}
@@ -385,7 +386,7 @@ class Games extends PureComponent<Props & FormProps, State> {
         {/* Player modal */}
         <Modal
           title="Enter player"
-          visible={isPlayerModalVisible}
+          open={isPlayerModalVisible}
           onOk={this.handleOkPlayer}
           onCancel={this.handleCancelPlayer}
           footer={false}
@@ -428,7 +429,7 @@ class Games extends PureComponent<Props & FormProps, State> {
         {/* Question modal */}
         <Modal
           title="Enter question"
-          visible={isQuestionModalVisible}
+          open={isQuestionModalVisible}
           onOk={this.handleOkQuestion}
           onCancel={this.handleCancelQuestion}
           footer={false}

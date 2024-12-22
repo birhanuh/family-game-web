@@ -1,11 +1,11 @@
 import React, { PureComponent } from "react";
-import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, PageHeader } from 'antd';
+import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, Breadcrumb } from 'antd';
 import { CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
 import { getGame } from '../../actions/game'
 import { updateGame, updatePlayer, updateQuestion, resetGame } from '../../actions/game'
-import { RouteComponentProps } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import classnames from "classnames";
 import confetti from "canvas-confetti";
 
@@ -37,10 +37,6 @@ interface State {
   noCurrentPlayerError: boolean;
 }
 
-interface MatchParams {
-  gameId: string;
-};
-
 interface Props {
   getGame: (id: string) => Promise<void>;
   updateGame: (game: UpdateGameProp) => Promise<void>;
@@ -48,11 +44,12 @@ interface Props {
   updateQuestion: (question: QuestionProp) => Promise<void>;
   resetGame: (id: string) => Promise<void>;
   game: GameProp;
+  gameId: string;
 }
 
 
 
-class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State> {
+class Game extends PureComponent<Props, State> {
   countdown: any;
 
   state = {
@@ -70,10 +67,10 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
 
   componentDidMount = async () => {
     // Fetch Project when id is present in params
-    const { match } = this.props
+    const params = useParams();
 
-    if (match.params.gameId) {
-      this.props.getGame(match.params.gameId);
+    if (params.gameId) {
+      this.props.getGame(params.gameId);
     }
   }
 
@@ -158,7 +155,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     // Save nextPlayerIndex to storage for page refresh
     localStorage.setItem(gameId, (players.indexOf(currentPlayer) + 1).toString());
 
-    const questionsFiltered = questions.filter(question => !question.isAsked);
+    const questionsFiltered = questions.filter((question: any) => !question.isAsked);
     // Pick current Question
     const random = Math.floor(Math.random() * questionsFiltered.length);
 
@@ -248,10 +245,14 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
     }
   };
 
+
+  
   render() {
     const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
 
-    const { game, history } = this.props;
+    const { game } = this.props;
+
+    const navigate = useNavigate();
 
     return (
       <>
@@ -260,11 +261,10 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
           style={{ display: 'flex', textAlign: 'right' }}
         >
           <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
-            <PageHeader
-              className="site-page-header"
-              onBack={() => history.push('/')}
-              title="Back to games"
-            />
+            <Breadcrumb>
+              <Breadcrumb.Item onClick={() => navigate('/')}>Back to games</Breadcrumb.Item>
+            </Breadcrumb>
+
             <Button type='dashed' className='reset-btn' onClick={() => this.handleReset()}><RedoOutlined />Reset</Button>
           </Col>
         </Row>
@@ -315,8 +315,8 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
                   })}>
                     <Title level={2} className='score' >{item.score}</Title>
                     <div>
-                      <Button type='ghost' size='large' onClick={() => this.handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
-                      {item.playerId === playerId && <Button type='ghost' size='large' onClick={() => this.handleEditScorePlus()}><PlusCircleOutlined /></Button>}
+                      <Button type='default' size='large' onClick={() => this.handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
+                      {item.playerId === playerId && <Button type='default' size='large' onClick={() => this.handleEditScorePlus()}><PlusCircleOutlined /></Button>}
                     </div>
                   </Card>
                 </List.Item>
@@ -335,7 +335,7 @@ class Game extends PureComponent<RouteComponentProps<MatchParams> & Props, State
         </Row>
 
         {/* Confirmation modal */}
-        <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} visible={isConfirmationModalVisible} footer={false} closable={false}>
+        <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
 
           <Button type='primary' className='success-btn' block={true} onClick={() => this.handleYes()}><CheckOutlined />Yes</Button>
 

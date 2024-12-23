@@ -39,8 +39,8 @@ const App = () => {
             Card: {
               headerFontSize: 36,
               fontWeightStrong: 400,
+              headerHeight: 90,
               boxShadow: '0 1px 2px -2px rgba(248,66,66, 0.16), 0 3px 6px 0 rgba(248,66,66, 0.12), 0 5px 12px 4px rgba(248,66,66, 0.09)',
-              
             },
             Layout: {
               headerBg: 'transparent',

@@ -1,8 +1,9 @@
+import { GameProp } from '../actions/types'
 import {
-  CREATE_GAME, GET_GAMES, GET_GAME, UPDATE_GAME, RESET_GAME, DELETE_GAME, GameProp,
+  CREATE_GAME, GET_GAMES, GET_GAME, UPDATE_GAME, RESET_GAME, DELETE_GAME,
   ADD_PLAYER, UPDATE_PLAYER, DELETE_PLAYER,
-  ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION,
-} from '../actions/types'
+  ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION, 
+} from '../constants/games'
 
 export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '', games: [], game: { gameId: '', title: '',  }, player: { gameId: '', playerId: '', name: '', score: 0 }, question: { gameId: '', questionId: '', question: '', isAsked: false } })=> {
   switch (action.type) {

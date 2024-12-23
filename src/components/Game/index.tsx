@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, Breadcrumb } from 'antd';
-import { CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
 import { getGame } from '../../actions/games'
@@ -271,7 +271,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
         style={{ display: 'flex', textAlign: 'right' }}
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
-          <Breadcrumb items={[{ title: <Link to='/'>Back to games</Link> }, { title: game?.gameId}]} />
+          <Breadcrumb items={[{ title: <Link to='/'><ArrowLeftOutlined style={{ marginRight: 8}} />Back to games</Link> }, { title: game?.title}]} />
 
           <Button type='dashed' className='reset-btn' onClick={() => handleReset()}><RedoOutlined />Reset</Button>
         </Col>

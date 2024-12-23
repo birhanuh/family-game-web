@@ -18,7 +18,7 @@ module.exports = {
     },
     compress: true,
     historyApiFallback: true,
-    port: 3001,
+    port: 3000,
     client: {
       overlay: {
         warnings: false,
@@ -34,7 +34,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.CLIENT_URL': JSON.stringify('http://localhost:3000'),
-      'process.env.API_URL': JSON.stringify('https://dvh2cdgel6.execute-api.eu-west-1.amazonaws.com/dev'),
+      'process.env.API_URL': JSON.stringify('https://b51cjqumu8.execute-api.eu-west-1.amazonaws.com/dev'),  //http://localhost:3000/dev
     }),
   ],
   output: {

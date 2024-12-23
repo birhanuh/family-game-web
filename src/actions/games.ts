@@ -1,10 +1,12 @@
 import axios from 'axios'
-
 import {
-  CREATE_GAME, GET_GAMES, GET_GAME, UPDATE_GAME, RESET_GAME, DELETE_GAME, GameProp,
-  ADD_PLAYER, UPDATE_PLAYER, DELETE_PLAYER, PlayerProp,
-  ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION, QuestionProp, DeleteQuestionProp, DeletePlayerProp, UpdateGameProp
+  GameProp, PlayerProp, QuestionProp, DeleteQuestionProp, DeletePlayerProp, UpdateGameProp
 } from './types'
+import {
+  CREATE_GAME, GET_GAMES, GET_GAME, UPDATE_GAME, RESET_GAME, DELETE_GAME,
+  ADD_PLAYER, UPDATE_PLAYER, DELETE_PLAYER,
+  ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION, 
+} from '../constants/games'
 
 export function createGameAction(game: GameProp) {
   return {

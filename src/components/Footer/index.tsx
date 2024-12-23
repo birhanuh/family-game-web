@@ -1,16 +1,12 @@
-import React, { PureComponent } from "react";
+import React from "react";
 import { Layout } from 'antd';
 
 const { Footer } = Layout;
 
-class FooterPage extends PureComponent {
-  render() {
-    return (
-      <Footer>
-        <div>Family game. ©2021</div>
-      </Footer>
-    );
-  }
-}
-
-export default FooterPage;
+export const FooterPage = () => {
+  return (
+    <Footer>
+      <div>Family game. ©2025</div>
+    </Footer>
+  );
+};

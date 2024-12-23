@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Form,
   Input,
@@ -12,7 +12,7 @@ import {
   Modal,
   Alert,
   Badge,
-  FormProps,
+  // FormProps,
   Space,
 } from 'antd';
 import {
@@ -24,13 +24,13 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion } from '../../actions/game';
+import { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion } from '../../actions/games';
 import { DeletePlayerProp, DeleteQuestionProp, GameProp, PlayerProp, QuestionProp } from '../../actions/types';
 import classnames from 'classnames';
 
 const { Title } = Typography;
 
-interface State {
+interface GamesProps {
   currentGame: GameProp;
   isGameModalVisible: boolean;
   isPlayerModalVisible: boolean;
@@ -38,20 +38,23 @@ interface State {
   isSubmitting: boolean;
 }
 
-interface Props {
+interface DispatchProps {
   getGames: () => Promise<void>;
   createGame: (game: GameProp) => Promise<void>;
   addPlayer: (player: PlayerProp) => Promise<void>;
   addQuestion: (question: QuestionProp) => Promise<void>;
   deletePlayer: (player: DeletePlayerProp) => Promise<void>;
   deleteQuestion: (question: DeleteQuestionProp) => Promise<void>;
+}
+
+interface StateProps {
   games: [GameProp];
 }
 
-class Games extends PureComponent<Props & FormProps, State> {  
-  formRef: any = React.createRef();
+const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion }: StateProps & DispatchProps) => { 
+  const navigate = useNavigate();
 
-  state = {
+  const [gamesState, setGamesState] = useState<GamesProps>({
     currentGame: {
       gameId: '',
       title: '',
@@ -63,415 +66,411 @@ class Games extends PureComponent<Props & FormProps, State> {
     isPlayerModalVisible: false,
     isQuestionModalVisible: false,
     isSubmitting: false,
-  };
+  });
 
-  componentDidMount() {
-    this.props.getGames();
-    console.log('L: ',  this.props.getGames());
+  const formRef = useRef<any>(null);
+  
+  useEffect(() => {
+    getGames();
     
-  }
-
-  UNSAFE_componentWillReceiveProps = (nextProps: any) => {
-    if (nextProps.games) {
-      const { games } = nextProps;
-
-      games.map((game: GameProp) => {
-        if (game.gameId === this.state.currentGame.gameId) {
-          this.setState({
-            currentGame: game,
-          });
-        }
-      });
-    }
-  };
+      // (getGames as any).map((gm: GameProp) => {
+      //   if (gm.gameId === game.currentGame.gameId) {
+      //     setGamesState({
+      //       ...gamesState,
+      //       currentGame: gm,
+      //     });
+      //   }
+      // });
+  }, []);
 
   // Game
-  handleGame = () => {
-    this.setState({
+  const handleGame = () => {
+    setGamesState({
+      ...gamesState,
       isGameModalVisible: true,
     });
   };
 
-  handleCancelGame = () => {
-    this.setState({
+  const handleCancelGame = () => {
+    setGamesState({
+      ...gamesState,
       isGameModalVisible: false,
     });
   };
 
-  onGameFinish = (values: any) => {
-    this.setState({
+  const onGameFinish = (values: any) => {
+    setGamesState({
+      ...gamesState,
       isSubmitting: true,
     });
 
-    this.props.createGame(values);
+    createGame(values);
 
     // @ts-ignore
-    this.formRef.current.resetFields();
+    formRef.current.resetFields();
 
-    this.setState({
+    setGamesState({
+      ...gamesState,
       isGameModalVisible: false,
       isSubmitting: false,
     });
   };
 
-  onGameFinishFailed = (errorInfo: any) => {
+  const onGameFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
   // Player
-  handlePlayer = (game: GameProp) => {
-    this.setState({
-      currentGame: game,
+  const handlePlayer = (gm: GameProp) => {
+    setGamesState({
+      ...gamesState,
+      currentGame: gm,
       isPlayerModalVisible: true,
     });
   };
 
-  handleOkPlayer = () => {
-    this.setState({
+  const handleOkPlayer = () => {
+    setGamesState({
+      ...gamesState,
       isPlayerModalVisible: false,
     });
   };
 
-  handleCancelPlayer = () => {
-    this.setState({
+ const handleCancelPlayer = () => {
+    setGamesState({
+      ...gamesState,
       isPlayerModalVisible: false,
     });
   };
 
-  onPlayerFinish = (values: any, gameId: string) => {
-    this.setState({
+  const onPlayerFinish = (values: any, gameId: string) => {
+    setGamesState({
+      ...gamesState,
       isSubmitting: true,
     });
 
-    this.props.addPlayer({ ...values, gameId });
+    addPlayer({ ...values, gameId });
 
     // @ts-ignore
-    this.formRef.current.resetFields();
+    formRef.current.resetFields();
 
-    this.setState({
+    setGamesState({
+      ...gamesState,
       isSubmitting: false,
     });
   };
 
-  onPlayerFinishFailed = (errorInfo: any) => {
+  const onPlayerFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
-  deletePlayer = (player: DeletePlayerProp) => {
-    this.props.deletePlayer(player);
-  };
-
   // Question
-  handleQuestion = (game: GameProp) => {
-    this.setState({
-      currentGame: game,
+  const handleQuestion = (gm: GameProp) => {
+    setGamesState({
+      ...gamesState,
+      currentGame: gm,
       isQuestionModalVisible: true,
     });
   };
 
-  handleOkQuestion = () => {
-    this.setState({
+  const handleOkQuestion = () => {
+    setGamesState({
+      ...gamesState,
       isQuestionModalVisible: false,
     });
   };
 
-  handleCancelQuestion = () => {
-    this.setState({
+  const handleCancelQuestion = () => {
+    setGamesState({
+      ...gamesState,
       isQuestionModalVisible: false,
     });
   };
 
-  onQuestionFinish = (values: any, gameId: string) => {
-    this.setState({
+  const onQuestionFinish = (values: any, gameId: string) => {
+    setGamesState({
+      ...gamesState,
       isSubmitting: true,
     });
 
-    this.props.addQuestion({ ...values, gameId });
+    addQuestion({ ...values, gameId });
 
     // @ts-ignore
-    this.formRef.current.resetFields();
+    formRef.current.resetFields();
 
-    this.setState({
+    setGamesState({
+      ...gamesState,
       isSubmitting: false,
     });
   };
 
-  onQuestionFinishFailed = (errorInfo: any) => {
+  const onQuestionFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
-  deleteQuestion = (question: DeleteQuestionProp) => {
-    this.props.deleteQuestion(question);
-  };
-
-  handleOnClick = (item: any) => {
-    const navigate = useNavigate();
-
+  const handleOnClick = (item: any) => {
     navigate( `games/${item.gameId}`)
   };
 
-  render() {
-    const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = this.state;
+  const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = gamesState;
 
-    const { games } = this.props;
+  console.log('Games: ', games);
+  const EmptyListAlert = () => (
+    <Alert
+      style={{ marginTop: 20, marginBottom: 20 }}
+      message="Tällä hetkellä ei ole näytettäviä pelejä"
+      description="Tällä hetkellä ei ole näytettäviä pelejä"
+      type="info"
+      showIcon={true}
+    />
+  );
 
-    const EmptyListAlert = () => (
-      <Alert
-        style={{ marginTop: 20, marginBottom: 20 }}
-        message="Tällä hetkellä ei ole näytettäviä pelejä"
-        description="Tällä hetkellä ei ole näytettäviä pelejä"
-        type="info"
-        showIcon={true}
-      />
-    );
-
-    return (
-      <>
-        <Row justify="center" className="games-heading" style={{ textAlign: 'center' }}>
-          <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-            <Title level={3}>Tervetuloa Family gamin! Luo peli napsauttamalla "Luo peli" -painiketta.</Title>
-            <Button type="primary" size="large" onClick={() => this.handleGame()}>
-              <PlusCircleOutlined />
-              Luo peli
-            </Button>
-          </Col>
-        </Row>
-        <Row justify="center" className="games-items" style={{ marginTop: 40 }}>
-          <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-            <List
-              grid={{
-                gutter: 48,
-                xs: 1,
-                sm: 1,
-                md: 1,
-                lg: 1,
-                xl: 1,
-                xxl: 1,
-              }}
-              loading={!games}
-              locale={{ emptyText: <EmptyListAlert /> }}
-              dataSource={games}
-              renderItem={(item: GameProp) => (
-                <List.Item>
-                  <Badge.Ribbon
-                    className={classnames('seconds', {
-                      'no-winner': Object.keys(item.winner).length == 0,
-                    })}
-                    text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}
-                  >
-                    <Card title={item.title}>
-                      {(item.players.length > item.questions.length && (
+  return (
+    <>
+      <Row justify="center" className="games-heading" style={{ textAlign: 'center' }}>
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}>
+          <Title level={3}>Tervetuloa Family gamin! Luo peli napsauttamalla "Luo peli" -painiketta.</Title>
+          <Button type="primary" size="large" onClick={() => handleGame()}>
+            <PlusCircleOutlined />
+            Luo peli
+          </Button>
+        </Col>
+      </Row>
+      <Row justify="center" className="games-items" style={{ marginTop: 40 }}>
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}>
+          <List
+            grid={{
+              gutter: 48,
+              xs: 1,
+              sm: 1,
+              md: 1,
+              lg: 1,
+              xl: 1,
+              xxl: 1,
+            }}
+            loading={!games}
+            locale={{ emptyText: <EmptyListAlert /> }}
+            dataSource={games}
+            renderItem={(item: GameProp) => (
+              <List.Item>
+                <Badge.Ribbon
+                  className={classnames('seconds', {
+                    'no-winner': Object.keys(item.winner).length == 0,
+                  })}
+                  text={Object.keys(item.winner).length > 0 ? 'Winner: ' + item.winner.name : ''}
+                >
+                  <Card title={item.title}>
+                    {(item.players.length > item.questions.length && (
+                      <Alert
+                        message="Number of Players should not be more than Questions"
+                        type="error"
+                        showIcon={true}
+                      />
+                    )) ||
+                      (item.players.length === 0 && item.questions.length === 0 && (
                         <Alert
-                          message="Number of Players should not be more than Questions"
+                          message="Lisää pelaajia ja kysymyksiä aloittaaksesi pelaamisen"
                           type="error"
                           showIcon={true}
                         />
                       )) ||
-                        (item.players.length === 0 && item.questions.length === 0 && (
-                          <Alert
-                            message="Lisää pelaajia ja kysymyksiä aloittaaksesi pelaamisen"
-                            type="error"
-                            showIcon={true}
-                          />
-                        )) ||
-                        (item.questions.length % item.players.length !== 0 && (
-                          <Alert
-                            message="Kysymysten määrä on jaettava tasan pelaajan lukumäärään"
-                            type="error"
-                            showIcon={true}
-                          />
-                        ))}
-                      <Row>
-                        <Col xs={24} sm={24} md={16} lg={16} xl={16}>
-                          <div className="questions-section">
-                            <div className="tags">
-                              {item.questions.map((question) => (
-                                <Tag
-                                  key={question.questionId}
-                                  closable={true}
-                                  onClose={() =>
-                                    this.deleteQuestion({ gameId: item.gameId, questionId: question.questionId })
-                                  }
-                                >
-                                  <div className="ant-tag-question">{question.question}</div>
-                                </Tag>
-                              ))}
-                            </div>
-                            <Button
-                              type="primary"
-                              size="small"
-                              className="add-question-btn"
-                              disabled={isSubmitting}
-                              onClick={() => this.handleQuestion(item)}
-                            >
-                              <FileUnknownOutlined />
-                              Lisää kysymys
-                            </Button>
+                      (item.questions.length % item.players.length !== 0 && (
+                        <Alert
+                          message="Kysymysten määrä on jaettava tasan pelaajan lukumäärään"
+                          type="error"
+                          showIcon={true}
+                        />
+                      ))}
+                    <Row>
+                      <Col xs={24} sm={24} md={16} lg={16} xl={16}>
+                        <div className="questions-section">
+                          <div className="tags">
+                            {item.questions.map((question) => (
+                              <Tag
+                                key={question.questionId}
+                                closable={true}
+                                onClose={() =>
+                                  deleteQuestion({ gameId: item.gameId, questionId: question.questionId })
+                                }
+                              >
+                                <div className="ant-tag-question">{question.question}</div>
+                              </Tag>
+                            ))}
                           </div>
-                        </Col>
-                        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-                          <div className="players-section">
-                            <div className="tags">
-                              {item.players.map((player) => (
-                                <Tag
-                                  key={player.playerId}
-                                  closable={true}
-                                  onClose={() => this.deletePlayer({ gameId: item.gameId, playerId: player.playerId })}
-                                >
-                                  {player.name}
-                                </Tag>
-                              ))}
-                            </div>
-                            <Button
-                              type="primary"
-                              size="small"
-                              className="add-player-btn"
-                              disabled={isSubmitting}
-                              onClick={() => this.handlePlayer(item)}
-                            >
-                              <UsergroupAddOutlined />
-                              Lisää pelaaja tai tiimi
-                            </Button>
-                          </div>
-                        </Col>
-                      </Row>
-                      <Row justify="center">
-                        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
                           <Button
-                          block
-                          type='default'
-                          disabled={ item.players.length > item.questions.length ||
-                            (item.players.length === 0 && item.questions.length === 0) ||
-                            item.questions.length % item.players.length !== 0}
-                            onClick={() => this.handleOnClick(item)}
+                            type="primary"
+                            size="small"
+                            className="add-question-btn"
+                            disabled={isSubmitting}
+                            onClick={() => handleQuestion(item)}
                           >
-                            <PlayCircleOutlined />
-                            <span>{`Play ${item.title}`}</span>
+                            <FileUnknownOutlined />
+                            Lisää kysymys
                           </Button>
-                        </Col>
-                      </Row>
-                    </Card>
-                  </Badge.Ribbon>
-                </List.Item>
-              )}
-            />
-          </Col>
-        </Row>
-        {/* Game modal */}
-        <Modal title="Enter game title" open={isGameModalVisible} onCancel={this.handleCancelGame} footer={false}>
-          <Form
-            layout="vertical"
-            ref={this.formRef}
-            onFinish={this.onGameFinish}
-            onFinishFailed={this.onGameFinishFailed}
-          >
-            <Form.Item label="Game" name="title" rules={[{ required: true, message: 'Please input game title!' }]}>
-              <Input />
-            </Form.Item>
-
-            <Form.Item>
-              <Space wrap>
-                <Button type="primary" htmlType="submit" disabled={isSubmitting}>
-                  <PlusCircleOutlined />
-                  Add
-                </Button>
-                <Button type="dashed" disabled={isSubmitting} onClick={this.handleCancelGame}>
-                  <CheckCircleOutlined />
-                  Done
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-        {/* Player modal */}
-        <Modal
-          title="Enter player"
-          open={isPlayerModalVisible}
-          onOk={this.handleOkPlayer}
-          onCancel={this.handleCancelPlayer}
-          footer={false}
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                        <div className="players-section">
+                          <div className="tags">
+                            {item.players.map((player) => (
+                              <Tag
+                                key={player.playerId}
+                                closable={true}
+                                onClose={() => deletePlayer({ gameId: item.gameId, playerId: player.playerId })}
+                              >
+                                {player.name}
+                              </Tag>
+                            ))}
+                          </div>
+                          <Button
+                            type="primary"
+                            size="small"
+                            className="add-player-btn"
+                            disabled={isSubmitting}
+                            onClick={() => handlePlayer(item)}
+                          >
+                            <UsergroupAddOutlined />
+                            Lisää pelaaja tai tiimi
+                          </Button>
+                        </div>
+                      </Col>
+                    </Row>
+                    <Row justify="center">
+                      <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                        <Button
+                        block
+                        type='default'
+                        disabled={ item.players.length > item.questions.length ||
+                          (item.players.length === 0 && item.questions.length === 0) ||
+                          item.questions.length % item.players.length !== 0}
+                          onClick={() => handleOnClick(item)}
+                        >
+                          <PlayCircleOutlined />
+                          <span>{`Play ${item.title}`}</span>
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card>
+                </Badge.Ribbon>
+              </List.Item>
+            )}
+          />
+        </Col>
+      </Row>
+      {/* Game modal */}
+      <Modal title="Enter game title" open={isGameModalVisible} onCancel={handleCancelGame} footer={false}>
+        <Form
+          layout="vertical"
+          ref={formRef}
+          onFinish={onGameFinish}
+          onFinishFailed={onGameFinishFailed}
         >
-          {currentGame.players.map((player) => (
-            <Tag
-              key={player.playerId}
-              closable={true}
-              onClose={() => this.deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}
-            >
-              {player.name}
-            </Tag>
-          ))}
-          <Form
-            layout="vertical"
-            ref={this.formRef}
-            onFinish={(value) => this.onPlayerFinish(value, currentGame.gameId)}
-            onFinishFailed={this.onPlayerFinishFailed}
-            style={{ marginTop: 20 }}
+          <Form.Item label="Game" name="title" rules={[{ required: true, message: 'Please input game title!' }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item>
+            <Space wrap>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}>
+                <PlusCircleOutlined />
+                Add
+              </Button>
+              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelGame}>
+                <CheckCircleOutlined />
+                Done
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+      {/* Player modal */}
+      <Modal
+        title="Enter player"
+        open={isPlayerModalVisible}
+        onOk={handleOkPlayer}
+        onCancel={handleCancelPlayer}
+        footer={false}
+      >
+        {currentGame.players.map((player) => (
+          <Tag
+            key={player.playerId}
+            closable={true}
+            onClose={() => deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}
           >
-            <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input player name!' }]}>
-              <Input />
-            </Form.Item>
-
-            <Form.Item>
-              <Space wrap>
-                <Button type="primary" htmlType="submit" disabled={isSubmitting}>
-                  <PlusCircleOutlined />
-                  Add
-                </Button>
-                <Button type="dashed" disabled={isSubmitting} onClick={this.handleCancelPlayer}>
-                  <CheckCircleOutlined />
-                  Done
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Question modal */}
-        <Modal
-          title="Enter question"
-          open={isQuestionModalVisible}
-          onOk={this.handleOkQuestion}
-          onCancel={this.handleCancelQuestion}
-          footer={false}
+            {player.name}
+          </Tag>
+        ))}
+        <Form
+          layout="vertical"
+          ref={formRef}
+          onFinish={(value) => onPlayerFinish(value, currentGame.gameId)}
+          onFinishFailed={onPlayerFinishFailed}
+          style={{ marginTop: 20 }}
         >
-          {currentGame.questions.map((question) => (
-            <Tag
-              key={question.questionId}
-              className={question.questionId}
-              closable={true}
-              onClose={() => this.deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}
-            >
-              {question.question}
-            </Tag>
-          ))}
-          <Form
-            layout="vertical"
-            ref={this.formRef}
-            onFinish={(value) => this.onQuestionFinish(value, currentGame.gameId)}
-            onFinishFailed={this.onQuestionFinishFailed}
-            style={{ marginTop: 20 }}
-          >
-            <Form.Item label="Question" name="question" rules={[{ required: true, message: 'Please input question!' }]}>
-              <Input />
-            </Form.Item>
+          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input player name!' }]}>
+            <Input />
+          </Form.Item>
 
-            <Form.Item>
-              <Space wrap>
-                <Button type="primary" htmlType="submit" disabled={isSubmitting}>
-                  <PlusCircleOutlined />
-                  Add
-                </Button>
-                <Button type="dashed" disabled={isSubmitting} onClick={this.handleCancelQuestion}>
-                  <CheckCircleOutlined />
-                  Done
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </>
-    );
-  }
+          <Form.Item>
+            <Space wrap>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}>
+                <PlusCircleOutlined />
+                Add
+              </Button>
+              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelPlayer}>
+                <CheckCircleOutlined />
+                Done
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Question modal */}
+      <Modal
+        title="Enter question"
+        open={isQuestionModalVisible}
+        onOk={handleOkQuestion}
+        onCancel={handleCancelQuestion}
+        footer={false}
+      >
+        {currentGame.questions.map((question) => (
+          <Tag
+            key={question.questionId}
+            className={question.questionId}
+            closable={true}
+            onClose={() => deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}
+          >
+            {question.question}
+          </Tag>
+        ))}
+        <Form
+          layout="vertical"
+          ref={formRef}
+          onFinish={(value) => onQuestionFinish(value, currentGame.gameId)}
+          onFinishFailed={onQuestionFinishFailed}
+          style={{ marginTop: 20 }}
+        >
+          <Form.Item label="Question" name="question" rules={[{ required: true, message: 'Please input question!' }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item>
+            <Space wrap>
+              <Button type="primary" htmlType="submit" disabled={isSubmitting}>
+                <PlusCircleOutlined />
+                Add
+              </Button>
+              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelQuestion}>
+                <CheckCircleOutlined />
+                Done
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  );
 }
 
 function mapStateToProps(state: any) {
@@ -480,6 +479,6 @@ function mapStateToProps(state: any) {
   };
 }
 
-export default connect(mapStateToProps, { getGames, createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion })(
+export default connect<StateProps, DispatchProps>(mapStateToProps, { getGames , createGame, addPlayer, addQuestion, deletePlayer, deleteQuestion } as any)(
   Games
 );

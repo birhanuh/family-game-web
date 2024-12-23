@@ -1,13 +1,15 @@
-import React, { PureComponent } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, Breadcrumb } from 'antd';
 import { CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
-import { getGame } from '../../actions/game'
-import { updateGame, updatePlayer, updateQuestion, resetGame } from '../../actions/game'
-import { useNavigate, useParams } from "react-router";
+import { getGame } from '../../actions/games'
+import { updateGame, updatePlayer, updateQuestion, resetGame } from '../../actions/games'
+import { useParams } from "react-router";
 import classnames from "classnames";
 import confetti from "canvas-confetti";
+import { Link } from "react-router-dom";
+import { withRouter } from "../../withRouter";
 
 const myCanvas: any = document.getElementById('canvas');
 
@@ -24,7 +26,7 @@ const confettiAudio = new Audio(confettiA);
 
 const { Title } = Typography;
 
-interface State {
+interface GameProps {
   seconds: number;
   isGameActive: boolean;
   isGameOver: boolean;
@@ -37,22 +39,28 @@ interface State {
   noCurrentPlayerError: boolean;
 }
 
-interface Props {
+interface DispatchProps {
   getGame: (id: string) => Promise<void>;
   updateGame: (game: UpdateGameProp) => Promise<void>;
   updatePlayer: (player: PlayerProp) => Promise<void>;
   updateQuestion: (question: QuestionProp) => Promise<void>;
   resetGame: (id: string) => Promise<void>;
-  game: GameProp;
-  gameId: string;
 }
 
+// interface MatchParams {
+//   gameId: string;
+// };
 
+interface StateProps {
+  game?: GameProp;
+}
 
-class Game extends PureComponent<Props, State> {
-  countdown: any;
+let countdown: any;
 
-  state = {
+const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGame }: StateProps & DispatchProps) => {
+  const params = useParams();
+
+  const [gameState, setGameState] = useState<GameProps>({
     seconds: 30,
     isGameActive: false,
     isGameOver: false,
@@ -63,40 +71,39 @@ class Game extends PureComponent<Props, State> {
     isConfirmationModalVisible: false,
     nextPlayerIndex: 0,
     noCurrentPlayerError: false
-  }
+  });
 
-  componentDidMount = async () => {
-    // Fetch Project when id is present in params
-    const params = useParams();
-
+  useEffect(() => {
+    // Set Game when id is present in params
     if (params.gameId) {
-      this.props.getGame(params.gameId);
+     getGame(params.gameId)
     }
-  }
+  }, [])
 
-  UNSAFE_componentWillReceiveProps = (nextProps: any) => {
-    if (nextProps.game) {
-      const { gameId, winner, title, players, questions } = nextProps.game;
+  useEffect(() => {
+    if (game) {
+      const { gameId, winner, title, players, questions } = game;
 
       const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
 
       if (questionsFiltered.length === 0) {
-        this.setState(({
+        setGameState(({
+          ...gameState,
           isGameOver: true
         }));
 
         if (Object.keys(winner).length === 0) {
-          const maxScore = players.reduce((prev: PlayerProp, current: PlayerProp) => {
-            return (prev.score > current.score) ? prev.score : current.score
-          });
+          const maxScore =  players.reduce((acc: number, val: PlayerProp) => 
+            (val.score > acc) ? val.score : acc, 0);
 
           // Calculate draw
           const winners = players.filter((player: PlayerProp) => player.score === maxScore && player);
 
           if (winners.length === 1) {
-            this.props.updateGame({ gameId, title, winner: winners[0] });
+            updateGame({ gameId, title, winner: winners[0] });
 
-            this.setState(({
+            setGameState(({
+              ...gameState,
               winner: winners[0]
             }));
 
@@ -108,29 +115,31 @@ class Game extends PureComponent<Props, State> {
         }
       }
     }
-  }
+  },[game])
 
-  componentWillUnmount = () => {
+  useEffect(() => {
     // Stop countdown
-    clearInterval(this.countdown);
-  }
+    clearInterval(countdown);
+  },[])
 
-  handleReset = () => {
-    const { gameId } = this.props.game;
-
-    this.props.resetGame(gameId);
+  const handleReset = () => {
+    if (game) {      
+    resetGame(game.gameId);
 
     // Active game back
-    this.setState(({
+    setGameState(({
+      ...gameState,
       isGameOver: false
     }));
 
     // Reset nextPlayerIndex
-    localStorage.setItem(gameId, '0');
+    localStorage.setItem(game.gameId, '0');
+    }
   }
 
-  handleStart = () => {
-    this.setState(({
+  const handleStart = () => {
+    setGameState(({
+      ...gameState,
       seconds: 30,
       isGameActive: true,
       noCurrentPlayerError: false
@@ -138,8 +147,8 @@ class Game extends PureComponent<Props, State> {
 
     let secondsCloned = 30;
 
-    const { game: { gameId, players, questions } } = this.props;
-    const { nextPlayerIndex } = this.state;
+    const { game: { gameId, players, questions } } = gameState;
+    const { nextPlayerIndex } = gameState;
 
     // Pick current Player
     const nextPlayerIndexFromStorage = localStorage.getItem(gameId);
@@ -147,7 +156,8 @@ class Game extends PureComponent<Props, State> {
 
     const currentPlayer = players[nextPlayerIndexDrived] ? players[nextPlayerIndexDrived] : players[0];
 
-    this.setState(({
+    setGameState(({
+      ...gameState,
       currentPlayer: { gameId, ...currentPlayer },
       nextPlayerIndex: players.indexOf(currentPlayer) + 1
     }));
@@ -161,14 +171,16 @@ class Game extends PureComponent<Props, State> {
 
     const currentQuestion = questionsFiltered[random];
 
-    this.setState(({
+    setGameState(({
+      ...gameState,
       currentQuestion: { gameId, ...currentQuestion },
     }));
 
     // Start countdown
-    this.countdown = setInterval(() => {
+    countdown = setInterval(() => {
       if (secondsCloned > 0) {
-        this.setState((state: State) => ({
+        setGameState((state: GameProps) => ({
+          ...gameState,
           seconds: state.seconds - 1
         }));
 
@@ -180,7 +192,7 @@ class Game extends PureComponent<Props, State> {
           clingAudio.play();
         }
       } else if (secondsCloned === 0) {
-        this.handleConfirmationModal();
+        handleConfirmationModal();
 
         secondsCloned = -1;
       }
@@ -188,173 +200,167 @@ class Game extends PureComponent<Props, State> {
   }
 
   // Confirmation
-  handleConfirmationModal = () => {
-    this.setState(({
+  const handleConfirmationModal = () => {
+    setGameState(({
+      ...gameState,
       isConfirmationModalVisible: true
     }));
   };
 
-  handleYes = () => {
-    const { currentPlayer, currentQuestion } = this.state;
+  const handleYes = () => {
+    const { currentPlayer, currentQuestion } = gameState;
 
-    this.props.updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
+    updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
 
-    this.props.updateQuestion({ ...currentQuestion, isAsked: true });
+    updateQuestion({ ...currentQuestion, isAsked: true });
 
-    this.setState(({
+    setGameState(({
+      ...gameState,
       isGameActive: false,
       isConfirmationModalVisible: false
     }));
   }
 
-  handleNo = () => {
-    const { currentQuestion } = this.state;
+  const handleNo = () => {
+    const { currentQuestion } = gameState;
 
-    this.props.updateQuestion({ ...currentQuestion, isAsked: true });
+    updateQuestion({ ...currentQuestion, isAsked: true });
 
-    this.setState(({
+    setGameState(({
+      ...gameState,
       isGameActive: false,
       isConfirmationModalVisible: false
     }));
   }
 
-  handleEditScoreMinus = (passedPlayer: PlayerProp) => {
-    const { game: { gameId } } = this.props;
-    this.props.updatePlayer({ gameId, ...passedPlayer, score: passedPlayer.score - 1 });
+  const handleEditScoreMinus = (passedPlayer: PlayerProp) => {
+    const { game: { gameId } } = gameState;
+    updatePlayer({ gameId, ...passedPlayer, score: passedPlayer.score - 1 });
   };
 
-  handleEditScorePlus = () => {
-    const { currentPlayer, currentQuestion } = this.state;
+  const handleEditScorePlus = () => {
+    const { currentPlayer, currentQuestion } = gameState;
 
-    if (currentPlayer.gameId.length !== 0) {
+    if (currentPlayer.gameId?.length !== 0) {
       // Stop countdown
-      clearInterval(this.countdown);
+      clearInterval(countdown);
 
-      this.setState(({
+      setGameState(({
+        ...gameState,
         seconds: 30,
         isGameActive: false,
       }));
 
-      this.props.updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
+      updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
 
-      this.props.updateQuestion({ ...currentQuestion, isAsked: true });
+      updateQuestion({ ...currentQuestion, isAsked: true });
     } else {
-      this.setState(({
+      setGameState(({
+        ...gameState,
         noCurrentPlayerError: true,
       }));
     }
   };
 
-
+  const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = gameState;
   
-  render() {
-    const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = this.state;
+  return (
+    <>
+      <Row
+        justify="center"
+        style={{ display: 'flex', textAlign: 'right' }}
+      >
+        <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
+          <Breadcrumb items={[{ title: <Link to='/'>Back to games</Link> }, { title: game?.gameId}]} />
 
-    const { game } = this.props;
+          <Button type='dashed' className='reset-btn' onClick={() => handleReset()}><RedoOutlined />Reset</Button>
+        </Col>
+      </Row>
+      <Row
+        justify="center"
+        style={{ display: 'flex', textAlign: 'center' }}
+      >
+        <Col xs={24} sm={24} md={24} lg={24} xl={20} className='question-seconds'>
+          <Title>{question && question.length > 0 ? question : '--'}</Title>
+          <Title level={2} className={classnames("seconds", {
+            "orange": seconds < 6
+          })}>{seconds}</Title>
+        </Col>
+      </Row>
+      <Row
+        justify="center"
+        style={{ marginTop: 40 }}
+      >
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}>
+          {noCurrentPlayerError && <Alert
+            message="No active Player found"
+            type="error"
+            showIcon={true}
+          />}
+          {/* Confetti for winner player */}
+          <canvas id='canvas' style={{ height: 0 }} />
 
-    const navigate = useNavigate();
+          <List
+            grid={{
+              gutter: 48,
+              xs: 1,
+              sm: 2,
+              md: 2,
+              lg: 4,
+              xl: 4,
+              xxl: 4,
+            }}
+            className='player-items'
+            split={true}
+            style={{ textAlign: 'center' }}
+            dataSource={game && game.players}
+            renderItem={(item: PlayerProp) => (
+              <List.Item>
 
-    return (
-      <>
-        <Row
-          justify="center"
-          style={{ display: 'flex', textAlign: 'right' }}
-        >
-          <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
-            <Breadcrumb>
-              <Breadcrumb.Item onClick={() => navigate('/')}>Back to games</Breadcrumb.Item>
-            </Breadcrumb>
+                <Card title={item.name} bordered={false} className={classnames({
+                  "current": item.name === name,
+                  "winner": (item.name === (winner.name || game?.winner.name))
+                })}>
+                  <Title level={2} className='score' >{item.score}</Title>
+                  <div>
+                    <Button type='default' size='large' onClick={() => handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
+                    {item.playerId === playerId && <Button type='default' size='large' onClick={() => handleEditScorePlus()}><PlusCircleOutlined /></Button>}
+                  </div>
+                </Card>
+              </List.Item>
+            )}
+          />
+        </Col>
+      </Row>
+      <Row
+        justify="center"
+        style={{ marginTop: 60 }}
+      >
+        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+          {isGameOver ? <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => handleReset()}><RedoOutlined />Reset</Button> :
+            <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => handleStart()}><PlayCircleOutlined />Start</Button>}
+        </Col>
+      </Row>
 
-            <Button type='dashed' className='reset-btn' onClick={() => this.handleReset()}><RedoOutlined />Reset</Button>
-          </Col>
-        </Row>
-        <Row
-          justify="center"
-          style={{ display: 'flex', textAlign: 'center' }}
-        >
-          <Col xs={24} sm={24} md={24} lg={24} xl={20} className='question-seconds'>
-            <Title>{question && question.length > 0 ? question : '--'}</Title>
-            <Title level={2} className={classnames("seconds", {
-              "orange": seconds < 6
-            })}>{seconds}</Title>
-          </Col>
-        </Row>
-        <Row
-          justify="center"
-          style={{ marginTop: 40 }}
-        >
-          <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-            {noCurrentPlayerError && <Alert
-              message="No active Player found"
-              type="error"
-              showIcon={true}
-            />}
-            {/* Confetti for winner player */}
-            <canvas id='canvas' style={{ height: 0 }} />
+      {/* Confirmation modal */}
+      <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
 
-            <List
-              grid={{
-                gutter: 48,
-                xs: 1,
-                sm: 2,
-                md: 2,
-                lg: 4,
-                xl: 4,
-                xxl: 4,
-              }}
-              className='player-items'
-              split={true}
-              style={{ textAlign: 'center' }}
-              dataSource={game && game.players}
-              renderItem={(item: PlayerProp) => (
-                <List.Item>
+        <Button type='primary' className='success-btn' block={true} onClick={() => handleYes()}><CheckOutlined />Yes</Button>
 
-                  <Card title={item.name} bordered={false} className={classnames({
-                    "current": item.name === name,
-                    "winner": (item.name === (winner.name || game.winner.name))
-                  })}>
-                    <Title level={2} className='score' >{item.score}</Title>
-                    <div>
-                      <Button type='default' size='large' onClick={() => this.handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
-                      {item.playerId === playerId && <Button type='default' size='large' onClick={() => this.handleEditScorePlus()}><PlusCircleOutlined /></Button>}
-                    </div>
-                  </Card>
-                </List.Item>
-              )}
-            />
-          </Col>
-        </Row>
-        <Row
-          justify="center"
-          style={{ marginTop: 60 }}
-        >
-          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-            {isGameOver ? <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => this.handleReset()}><RedoOutlined />Reset</Button> :
-              <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => this.handleStart()}><PlayCircleOutlined />Start</Button>}
-          </Col>
-        </Row>
+        <Divider />
 
-        {/* Confirmation modal */}
-        <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
-
-          <Button type='primary' className='success-btn' block={true} onClick={() => this.handleYes()}><CheckOutlined />Yes</Button>
-
-          <Divider />
-
-          <Button type='primary' danger={true} className='start-btn' block={true} onClick={() => this.handleNo()}><CloseOutlined />No</Button>
-        </Modal>
-      </>
-    );
-  }
+        <Button type='primary' danger={true} className='start-btn' block={true} onClick={() => handleNo()}><CloseOutlined />No</Button>
+      </Modal>
+    </>
+  );
 }
 
-function mapStateToProps(state: any, props: any) {
-  const { match } = props
-  if (match.params.gameId) {
+function mapStateToProps(state: any, props: any) {  
+  if (props.router.params.gameId) {
     return {
-      game: state.games.find((item: GameProp) => item.gameId === match.params.gameId)
+      game: state.games.find((item: GameProp) => item.gameId === props.router.params.gameId)
     }
   }
 }
 
-export default connect(mapStateToProps, { getGame, updateGame, updatePlayer, updateQuestion, resetGame })(Game);
+export default withRouter(connect<StateProps, DispatchProps>(mapStateToProps as any, { getGame, updateGame, updatePlayer, updateQuestion, resetGame } as any)(Game));

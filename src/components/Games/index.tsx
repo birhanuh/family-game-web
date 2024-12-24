@@ -12,11 +12,10 @@ import {
   Modal,
   Alert,
   Badge,
-  // FormProps,
   Space,
 } from 'antd';
 import {
-  CheckCircleOutlined,
+  CloseOutlined,
   FileUnknownOutlined,
   PlayCircleOutlined,
   PlusCircleOutlined,
@@ -36,6 +35,7 @@ interface GamesProps {
   isPlayerModalVisible: boolean;
   isQuestionModalVisible: boolean;
   isSubmitting: boolean;
+  isLoading: boolean;
 }
 
 interface DispatchProps {
@@ -66,39 +66,27 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     isPlayerModalVisible: false,
     isQuestionModalVisible: false,
     isSubmitting: false,
+    isLoading: true,
   });
 
-  const formRef = useRef<any>(null);
+  const formRef = useRef<any | undefined>(null);
   
   useEffect(() => {
-    getGames();
-    
-      // (getGames as any).map((gm: GameProp) => {
-      //   if (gm.gameId === game.currentGame.gameId) {
-      //     setGamesState({
-      //       ...gamesState,
-      //       currentGame: gm,
-      //     });
-      //   }
-      // });
+    getGames().then(() => setGamesState({
+      ...gamesState,
+      isLoading: false,
+    }));
   }, []);
 
   // Game
-  const handleGame = () => {
-    setGamesState({
+  const handleOpenAddGameModal = () => {
+    setGamesState(prev => ({
       ...gamesState,
-      isGameModalVisible: true,
-    });
+      isGameModalVisible: !prev.isGameModalVisible,
+    }));
   };
 
-  const handleCancelGame = () => {
-    setGamesState({
-      ...gamesState,
-      isGameModalVisible: false,
-    });
-  };
-
-  const onGameFinish = (values: any) => {
+  const onGameFinish = (values: GameProp) => {
     setGamesState({
       ...gamesState,
       isSubmitting: true,
@@ -116,12 +104,15 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     });
   };
 
-  const onGameFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo);
+  // Player
+  const handleOpenAddPlayerModal = () => {
+    setGamesState(prev =>({
+      ...gamesState,
+      isPlayerModalVisible: !prev.isPlayerModalVisible,
+    }));
   };
 
-  // Player
-  const handlePlayer = (gm: GameProp) => {
+  const handleAddPlayer = (gm: GameProp) => {
     setGamesState({
       ...gamesState,
       currentGame: gm,
@@ -129,23 +120,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     });
   };
 
-  const handleOkPlayer = () => {
+  const onPlayerFinish = (values: PlayerProp, gameId: string) => {
     setGamesState({
       ...gamesState,
-      isPlayerModalVisible: false,
-    });
-  };
-
- const handleCancelPlayer = () => {
-    setGamesState({
-      ...gamesState,
-      isPlayerModalVisible: false,
-    });
-  };
-
-  const onPlayerFinish = (values: any, gameId: string) => {
-    setGamesState({
-      ...gamesState,
+      currentGame: { ...gamesState.currentGame, players: [...gamesState.currentGame.players, values]},
       isSubmitting: true,
     });
 
@@ -156,16 +134,20 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
 
     setGamesState({
       ...gamesState,
+      currentGame: { ...gamesState.currentGame, players: [...gamesState.currentGame.players, values]},
       isSubmitting: false,
     });
   };
 
-  const onPlayerFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo);
+  // Question
+  const handleOpenAddQuestionModal = () => {
+    setGamesState(prev =>({
+      ...gamesState,
+      isQuestionModalVisible: !prev.isQuestionModalVisible,
+    }));
   };
 
-  // Question
-  const handleQuestion = (gm: GameProp) => {
+  const handleAddQuestion = (gm: GameProp) => {
     setGamesState({
       ...gamesState,
       currentGame: gm,
@@ -173,23 +155,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     });
   };
 
-  const handleOkQuestion = () => {
+  const onQuestionFinish = (values: QuestionProp, gameId: string) => {
     setGamesState({
       ...gamesState,
-      isQuestionModalVisible: false,
-    });
-  };
-
-  const handleCancelQuestion = () => {
-    setGamesState({
-      ...gamesState,
-      isQuestionModalVisible: false,
-    });
-  };
-
-  const onQuestionFinish = (values: any, gameId: string) => {
-    setGamesState({
-      ...gamesState,
+      currentGame: { ...gamesState.currentGame, questions: [...gamesState.currentGame.questions, values]},
       isSubmitting: true,
     });
 
@@ -200,21 +169,29 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
 
     setGamesState({
       ...gamesState,
+      currentGame: { ...gamesState.currentGame, questions: [...gamesState.currentGame.questions, values]},
       isSubmitting: false,
     });
+  };
+
+  const onPlayerFinishFailed = (errorInfo: any) => {
+    console.log('Failed:', errorInfo);
   };
 
   const onQuestionFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
-  const handleOnClick = (item: any) => {
+  const onGameFinishFailed = (errorInfo: any) => {
+    console.log('Failed:', errorInfo);
+  };
+
+  const handleOnClick = (item: GameProp) => {
     navigate( `games/${item.gameId}`)
   };
 
-  const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting } = gamesState;
+  const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting, isLoading } = gamesState;
 
-  console.log('Games: ', games);
   const EmptyListAlert = () => (
     <Alert
       style={{ marginTop: 20, marginBottom: 20 }}
@@ -230,7 +207,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       <Row justify="center" className="games-heading" style={{ textAlign: 'center' }}>
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
           <Title level={3}>Tervetuloa Family gamin! Luo peli napsauttamalla "Luo peli" -painiketta.</Title>
-          <Button type="primary" size="large" onClick={() => handleGame()}>
+          <Button type="primary" size="large" onClick={handleOpenAddGameModal}>
             <PlusCircleOutlined />
             Luo peli
           </Button>
@@ -248,7 +225,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
               xl: 1,
               xxl: 1,
             }}
-            loading={!games}
+            loading={isLoading}
             locale={{ emptyText: <EmptyListAlert /> }}
             dataSource={games}
             renderItem={(item: GameProp) => (
@@ -287,7 +264,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <div className="tags">
                             {item.questions.map((question) => (
                               <Tag
-                                key={question.questionId}
+                                key={`${question.questionId}-q`}
                                 closable={true}
                                 onClose={() =>
                                   deleteQuestion({ gameId: item.gameId, questionId: question.questionId })
@@ -300,9 +277,8 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <Button
                             type="primary"
                             size="small"
-                            className="add-question-btn"
                             disabled={isSubmitting}
-                            onClick={() => handleQuestion(item)}
+                            onClick={() => handleAddQuestion(item)}
                           >
                             <FileUnknownOutlined />
                             Lisää kysymys
@@ -314,7 +290,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <div className="tags">
                             {item.players.map((player) => (
                               <Tag
-                                key={player.playerId}
+                                key={`${player.playerId}-q`}
                                 closable={true}
                                 onClose={() => deletePlayer({ gameId: item.gameId, playerId: player.playerId })}
                               >
@@ -325,9 +301,8 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <Button
                             type="primary"
                             size="small"
-                            className="add-player-btn"
                             disabled={isSubmitting}
-                            onClick={() => handlePlayer(item)}
+                            onClick={() => handleAddPlayer(item)}
                           >
                             <UsergroupAddOutlined />
                             Lisää pelaaja tai tiimi
@@ -358,7 +333,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         </Col>
       </Row>
       {/* Game modal */}
-      <Modal title="Enter game title" open={isGameModalVisible} onCancel={handleCancelGame} footer={false}>
+      <Modal title="Enter game title" open={isGameModalVisible} onCancel={handleOpenAddGameModal} footer={false}>
         <Form
           layout="vertical"
           ref={formRef}
@@ -375,9 +350,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                 <PlusCircleOutlined />
                 Add
               </Button>
-              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelGame}>
-                <CheckCircleOutlined />
-                Done
+              <Button type="text" disabled={isSubmitting} onClick={handleOpenAddGameModal}>
+                <CloseOutlined />
+                Cancel
               </Button>
             </Space>
           </Form.Item>
@@ -387,13 +362,13 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       <Modal
         title="Enter player"
         open={isPlayerModalVisible}
-        onOk={handleOkPlayer}
-        onCancel={handleCancelPlayer}
+        onOk={handleOpenAddPlayerModal}
+        onCancel={handleOpenAddPlayerModal}
         footer={false}
       >
         {currentGame.players.map((player) => (
           <Tag
-            key={player.playerId}
+            key={`${player.playerId}-p2`}
             closable={true}
             onClose={() => deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}
           >
@@ -417,9 +392,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                 <PlusCircleOutlined />
                 Add
               </Button>
-              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelPlayer}>
-                <CheckCircleOutlined />
-                Done
+              <Button type="text" disabled={isSubmitting} onClick={handleOpenAddPlayerModal}>
+                <CloseOutlined />
+                Cancel
               </Button>
             </Space>
           </Form.Item>
@@ -430,13 +405,13 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       <Modal
         title="Enter question"
         open={isQuestionModalVisible}
-        onOk={handleOkQuestion}
-        onCancel={handleCancelQuestion}
+        onOk={handleOpenAddQuestionModal}
+        onCancel={handleOpenAddQuestionModal}
         footer={false}
       >
         {currentGame.questions.map((question) => (
           <Tag
-            key={question.questionId}
+            key={`${question.questionId}-q2`}
             className={question.questionId}
             closable={true}
             onClose={() => deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}
@@ -461,9 +436,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                 <PlusCircleOutlined />
                 Add
               </Button>
-              <Button type="dashed" disabled={isSubmitting} onClick={handleCancelQuestion}>
-                <CheckCircleOutlined />
-                Done
+              <Button type="text" disabled={isSubmitting} onClick={handleOpenAddQuestionModal}>
+                <CloseOutlined />
+                Cancel
               </Button>
             </Space>
           </Form.Item>

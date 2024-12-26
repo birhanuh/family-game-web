@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 
 // env
 //const env = require("../env");
@@ -13,12 +13,14 @@ module.exports = {
     app: './src/index.tsx',
   },
   devtool: 'source-map',
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin()],
+  },
   plugins: [
-    new UglifyJSPlugin({
-      sourceMap: true,
-    }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
+      filename: 'index.html',
       template: './public/index.html',
     }),
     new webpack.DefinePlugin({

@@ -63,20 +63,14 @@ body,
   }
 }
 
-.games-items {
-  .ant-list-item {
-    margin-bottom: 36px !important;
-  }
-}
-
 .no-winner {
   visibility: hidden;
 }
 
 .ant-ribbon {
-  background-color: #fe0080;
+  background-color: @blue;
   .ant-ribbon-corner {
-    color:  #fe0080;
+    color:  @blue;
   }
 }
 
@@ -89,7 +83,6 @@ body,
 
 .questions-section {
   margin-right: 16px;
-
   .ant-tag-question {
     filter: blur(4px);
     display: inline-block;
@@ -111,54 +104,14 @@ body,
 }
 
 // Game
-.question-seconds {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  min-height: 200px;
-  h2.ant-typography.seconds {
-    font-size: 128px;
-    color: @green;
-    font-weight: 700;
-  }
-  h2.ant-typography.seconds.orange {
-    color: @orange;
-  }
-  h1.ant-typography,
-  h2.ant-typography {
-    margin: 0;
-  }
-}
-
 .player-items {
-  .current {
+  .current, .winner {
     .ant-card-head-title {
       color: @green;
     }
-  }
-  .winner {
-    .ant-card-head-title {
-      color: @green;
-    }
-  }
-  .score {
-    font-size: 96px;
-  }
-  .ant-card-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    min-height: 24vh;
   }
   .ant-spin-container > div {
     justify-content: space-around;
-  }
-}
-
-.game {
-  .ant-modal-title h4.ant-typography {
-    margin: 0;
   }
 }
 

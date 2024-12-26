@@ -250,7 +250,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
           <Breadcrumb items={[{ title: <Link to='/'><ArrowLeftOutlined style={{ marginRight: 8}} />Back to games</Link> }, { title: game?.title}]} />
-          <Button type='dashed' className='reset-btn' onClick={() => handleReset()}><RedoOutlined />Reset</Button>
+          <Button onClick={() => handleReset()}><RedoOutlined />Reset</Button>
         </Col>
       </Row>
       {(winner.name || game?.winner.name) && <Row
@@ -270,9 +270,9 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
         justify="space-around"
         style={{ display: 'flex', textAlign: 'center' }}
       >
-        <Col xs={24} sm={24} md={24} lg={24} xl={20} className='question-seconds'>
-          <Title>{question && question.length > 0 ? question : '--'}</Title>
-          <Title level={2} className={classnames("seconds", {
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}  style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Title level={2}>{question && question.length > 0 ? question : 'ACD'}</Title>
+          <Title className={classnames("seconds", {
             "orange": seconds < 6
           })}>{seconds}</Title>
         </Col>
@@ -288,35 +288,29 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
             grid={{
               gutter: 48,
               xs: 1,
-              sm: 2,
+              sm: 1,
               md: 2,
-              lg: 4,
+              lg: 2,
               xl: 4,
               xxl: 4,
             }}
             className='player-items'
             loading={isLoading}
             split={true}
-            style={{ textAlign: 'center' }}
-            dataSource={game && game.players}
+            dataSource={game?.players}
             renderItem={(item: PlayerProp) => (
               <List.Item>
                 <Card title={`${item.name} ${(winner.name || game?.winner.name) === item.name ? '🎉' : ''}`} bordered={false} className={classnames({
                   "current": !(winner.name || game?.winner.name) && item.name === name,
                   "winner": (item.name === (winner.name || game?.winner.name))
                 })}>
-                  <Title level={2} className='score' >{item.score}</Title>                  
-                  <Row
-                    justify="center"
-                    style={{ display: 'flex', justifyContent: 'space-between' }}
-                  >
+                  <Title level={3} style={{ textAlign: 'center' }}>{item.score}</Title>          
                     <Col xs={24} sm={24} md={8} lg={8} xl={8}>
                       {item.playerId === playerId && <Button type='default' size='large' onClick={() => handleEditScore('plus')}><PlusCircleOutlined /></Button>}
                     </Col>
                     {status === 'pause' && item.playerId === playerId && <Col xs={24} sm={24} md={8} lg={8} xl={8}>
                       <Button type='primary' danger={true} size='large' onClick={() => handleEditScore('minus')}><MinusCircleOutlined /></Button>
                     </Col>}
-                  </Row>
                 </Card>
               </List.Item>
             )}
@@ -336,7 +330,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       </Row>
 
       {/* Confirmation modal */}
-      <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
+      <Modal title={<Title level={5}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
         <Button type='default' block={true} onClick={() => handleYesNo('yes')}><CheckOutlined />Yes</Button>
         <Divider />
         <Button type='primary' danger={true} block={true} onClick={() => handleYesNo('no')}><CloseOutlined />No</Button>

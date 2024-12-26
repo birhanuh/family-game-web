@@ -15,10 +15,13 @@ p {
 }
 
 // Headers
-h1.ant-typography, .ant-typography h1 {
-  color: #fe0080;
+.ant-typography+h1.ant-typography {
+  color: @green;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
-h2.ant-typography, .ant-typography h2 {
-  font-weight: 500;
+h2.ant-typography, .ant-typography h2 {  
+  color: @red;
+  margin-bottom: 0;
 }

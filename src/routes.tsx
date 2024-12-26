@@ -47,8 +47,8 @@ const App = () => {
               headerColor: '#111111',
               headerHeight: 100,
               footerBg: '#25252a',
-              footerPadding: '42px 50px'
-            }
+              footerPadding: '42px 50px',
+            },
           },
           token: {
             fontFamily: "'Open Sans', -apple - system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans- serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
@@ -59,8 +59,10 @@ const App = () => {
             borderRadius: 4,
             colorBorder: '#FF9191',
             boxShadow: '0 1px 2px -2px rgba(248,66,66, 0.16), 0 3px 6px 0 rgba(248,66,66, 0.12), 0 5px 12px 4px rgba(248,66,66, 0.09)',
-            fontSizeHeading1: 96,
-            fontSizeHeading2: 48,
+            fontSizeHeading1: 128,
+            fontSizeHeading2: 96,
+            fontSizeHeading3: 84,
+            fontSizeHeading4: 30,
             colorError: '#ee1911',
           }
         }}

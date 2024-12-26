@@ -199,16 +199,16 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
 
   return (
     <>
-      <Row justify="center" className="games-heading" style={{ textAlign: 'center' }}>
+      <Row justify="center" style={{ textAlign: 'center' }}>
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-          <Title level={3}>Welcome to the Family game! Create a game by pressing the "Create game" button bellow.</Title>
+          <Title level={4}>Welcome to the Family game! Create a game by pressing the "Create game" button bellow.</Title>
           <Button type="primary" size="large" onClick={handleOpenAddGameModal}>
             <PlusCircleOutlined />
             Create game
           </Button>
         </Col>
       </Row>
-      <Row justify="center" className="games-items" style={{ marginTop: 40 }}>
+      <Row justify="center" style={{ marginTop: 40 }}>
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
           <List
             grid={{
@@ -406,7 +406,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         {games.find(game => game.gameId === currentGameId)?.questions.map((question) => (
           <Tag
             key={question?.questionId ?? question.question}
-            className={question.questionId}
             closable={true}
             onClose={() => deleteQuestion({ questionId: question.questionId }, currentGameId)}
           >

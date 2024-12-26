@@ -55,10 +55,10 @@ export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '',
       return state.filter((item: GameProp) => item.gameId !== action.id)
 
     case ADD_PLAYER:
-      const indexOfAddPlayer = state.findIndex((item: GameProp) => item.gameId === action.game.gameId)
+      const indexOfAddPlayer = state.findIndex((item: GameProp) => item.gameId === action.gameId)
       if (indexOfAddPlayer > -1) {
         return state.map((item: GameProp) => {
-          if (item.gameId === action.game.gameId) {
+          if (item.gameId === action.gameId) {
             return {
               ...item,
               players: [...item.players, action.player]
@@ -74,9 +74,7 @@ export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '',
       const indexOfUpdatePlayer = state.findIndex((item: GameProp) => item.gameId === action.gameId)
       if (indexOfUpdatePlayer > -1) {
         return state.map((item: GameProp) => {
-          if (item.gameId === action.gameId) {
-            console.log('Log: ', item.players, action);
-            
+          if (item.gameId === action.gameId) {            
             return {
               ...item,
               players: item.players.map(player => player.playerId === action.player.playerId ? action.player : player)
@@ -137,10 +135,10 @@ export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '',
       }
 
     case DELETE_QUESTION:
-      const indexOfDeleteQuestion = state.findIndex((item: GameProp) => item.gameId === action.game.gameId)
+      const indexOfDeleteQuestion = state.findIndex((item: GameProp) => item.gameId === action.gameId)
       if (indexOfDeleteQuestion > -1) {
         return state.map((item: GameProp) => {
-          if (item.gameId === action.game.gameId) {
+          if (item.gameId === action.gameId) {
             return {
               ...item,
               questions: [...item.questions.filter(questionItem => questionItem.questionId !== action.question.questionId)]

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Card, Col, Row, List, Typography, Modal, Divider, Breadcrumb } from 'antd';
+import React, { useCallback, useEffect, useState } from "react";
+import { Button, Card, Col, Row, List, Typography, Modal, Divider, Breadcrumb, Alert } from 'antd';
 import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
@@ -7,7 +7,7 @@ import { getGame } from '../../actions/games'
 import { updateGame, updatePlayer, updateQuestion, resetGame } from '../../actions/games'
 import { useParams } from "react-router";
 import classnames from "classnames";
-import confetti from "canvas-confetti";
+import FireWorks from "react-canvas-confetti/dist/presets/fireworks";
 import { Link } from "react-router-dom";
 import { withRouter } from "../../withRouter";
 
@@ -21,7 +21,6 @@ const { Title } = Typography;
 
 interface GameProps {
   status: 'start' | 'pause' | 'reset';
-  isGameOver: boolean;
   currentQuestion: QuestionProp;
   currentPlayer: PlayerProp;
   winner: PlayerProp;
@@ -54,22 +53,16 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
   const params = useParams();
 
   const [seconds, setSeconds] = useState<number>(30);
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
+  const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameProps>({
     status: 'pause',
-    isGameOver: false,
     currentQuestion: { questionId: '', question: '', isAsked: false },
     currentPlayer: { playerId: '', name: '', score: 0 },
     winner: { playerId: '', name: '', score: 0 },
     isConfirmationModalVisible: false,
     nextPlayerIndex: 0,
-    isLoading: false
-  });
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  const myConfetti = confetti.create(canvasRef as any, {
-    resize: true,
-    useWorker: true,
+    isLoading: false,
   });
   
   useEffect(() => {
@@ -87,19 +80,16 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     }
   }, [params.gameId])
 
-  useEffect(() => {
-    console.log('GM: ', game);    
+  useEffect(() => {    
     if (game) {
       const { winner, players, questions } = game;
 
       const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
 
       if (questionsFiltered.length === 0) {
-        setGameState(({
-          ...gameState,
-          isGameOver: true
-        }));
-
+        
+        setIsGameOver(true);
+        
         if (Object.keys(winner).length === 0) {
           const maxScore =  players.reduce((acc: number, val: PlayerProp) => 
             (val.score > acc) ? val.score : acc, 0);
@@ -118,12 +108,20 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
             // Play confetti
             confettiAudio.play();
 
-            myConfetti();
+            setShowConfetti(true);
           }
         }
       }
     }
   },[game])
+
+  useEffect(() => {
+    let timeout: undefined | NodeJS.Timeout;
+
+    timeout = setTimeout(() => setShowConfetti(false), 10000)
+
+    return () => clearInterval(timeout);
+  }, [gameState.winner]);
 
   useEffect(() => {
     if (seconds < 6) {
@@ -157,7 +155,6 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       setGameState(({
         ...gameState,
         status: 'reset',
-        isGameOver: false
       }));
     }
 
@@ -197,7 +194,9 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     const { currentPlayer, currentQuestion } = gameState;
 
     if(game) {
-      updatePlayer({ ...currentPlayer, score: action === 'yes'  ? currentPlayer.score + 1 : currentPlayer.score }, game.gameId); 
+      if (action === 'yes') {
+        updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 }, game.gameId);  
+      }
 
       updateQuestion({ ...currentQuestion, isAsked: true }, game.gameId);
     }
@@ -220,7 +219,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     // Reset countdown
     setGameState(({
       ...gameState,
-      status: 'reset'
+      status: 'pause'
     }));
   };
 
@@ -233,13 +232,15 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     }
 
     // Reset countdown
-       setGameState(({
+    setGameState(({
       ...gameState,
       status: 'reset'
     }));
+
+    setIsGameOver(false);
   }
 
-  const { currentPlayer: { playerId, name }, currentQuestion: { question }, winner, status, isGameOver, isConfirmationModalVisible, isLoading } = gameState;
+  const { currentPlayer: { playerId, name }, currentQuestion: { question }, winner, status, isConfirmationModalVisible, isLoading } = gameState;
   
   return (
     <>
@@ -247,13 +248,26 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
         justify="center"
         style={{ display: 'flex', textAlign: 'right' }}
       >
-        <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}>
           <Breadcrumb items={[{ title: <Link to='/'><ArrowLeftOutlined style={{ marginRight: 8}} />Back to games</Link> }, { title: game?.title}]} />
           <Button type='dashed' className='reset-btn' onClick={() => handleReset()}><RedoOutlined />Reset</Button>
         </Col>
       </Row>
-      <Row
+      {(winner.name || game?.winner.name) && <Row
         justify="center"
+        style={{ display: 'flex', textAlign: 'center' }}
+      >
+        <Col xs={24} sm={24} md={24} lg={24} xl={20}>
+          <Alert
+            style={{ marginTop: 20, marginBottom: 20 }}
+            message={`${winner.name || game?.winner.name} has won this game, congratulations 🎉`}
+            type="success"
+            showIcon={true}
+          />
+        </Col>
+      </Row>}
+      <Row
+        justify="space-around"
         style={{ display: 'flex', textAlign: 'center' }}
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20} className='question-seconds'>
@@ -269,7 +283,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
           {/* Confetti for winner player */}
-          <canvas  ref={canvasRef} style={{ height: 0 }} />
+          {showConfetti && <FireWorks autorun={{ speed: 3 }} />}
           <List
             grid={{
               gutter: 48,
@@ -287,8 +301,8 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
             dataSource={game && game.players}
             renderItem={(item: PlayerProp) => (
               <List.Item>
-                <Card title={item.name} bordered={false} className={classnames({
-                  "current": item.name === name,
+                <Card title={`${item.name} ${(winner.name || game?.winner.name) === item.name ? '🎉' : ''}`} bordered={false} className={classnames({
+                  "current": !(winner.name || game?.winner.name) && item.name === name,
                   "winner": (item.name === (winner.name || game?.winner.name))
                 })}>
                   <Title level={2} className='score' >{item.score}</Title>                  
@@ -297,11 +311,11 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
                     style={{ display: 'flex', justifyContent: 'space-between' }}
                   >
                     <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-                      {item.playerId === playerId && <Button type='primary' danger={true} size='large' onClick={() => handleEditScore('minus')}><MinusCircleOutlined /></Button>}
-                    </Col>
-                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
                       {item.playerId === playerId && <Button type='default' size='large' onClick={() => handleEditScore('plus')}><PlusCircleOutlined /></Button>}
                     </Col>
+                    {status === 'pause' && item.playerId === playerId && <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      <Button type='primary' danger={true} size='large' onClick={() => handleEditScore('minus')}><MinusCircleOutlined /></Button>
+                    </Col>}
                   </Row>
                 </Card>
               </List.Item>

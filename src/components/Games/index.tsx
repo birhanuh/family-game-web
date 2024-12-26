@@ -30,7 +30,7 @@ import classnames from 'classnames';
 const { Title } = Typography;
 
 interface GamesProps {
-  currentGame: GameProp;
+  currentGameId: string;
   isGameModalVisible: boolean;
   isPlayerModalVisible: boolean;
   isQuestionModalVisible: boolean;
@@ -55,13 +55,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
   const navigate = useNavigate();
 
   const [gamesState, setGamesState] = useState<GamesProps>({
-    currentGame: {
-      gameId: '',
-      title: '',
-      winner: { playerId: '', name: '', score: 0 },
-      players: [{ playerId: '', name: '', score: 0 }],
-      questions: [{ questionId: '', question: '', isAsked: false }],
-    },
+    currentGameId: '',
     isGameModalVisible: false,
     isPlayerModalVisible: false,
     isQuestionModalVisible: false,
@@ -76,7 +70,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       ...gamesState,
       isLoading: true,
     });
-    
+
     getGames().then(() => setGamesState({
       ...gamesState,
       isLoading: false,
@@ -117,10 +111,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     }));
   };
 
-  const handleAddPlayer = (gm: GameProp) => {
+  const handleAddPlayer = (currentGame: GameProp) => {
     setGamesState({
       ...gamesState,
-      currentGame: gm,
+      currentGameId: currentGame.gameId,
       isPlayerModalVisible: true,
     });
   };
@@ -128,7 +122,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
   const onPlayerFinish = (values: PlayerProp, gameId: string) => {    
     setGamesState({
       ...gamesState,
-      currentGame: { ...gamesState.currentGame, players: [...gamesState.currentGame.players, values]},
       isSubmitting: true,
     });
 
@@ -139,7 +132,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
 
     setGamesState({
       ...gamesState,
-      currentGame: { ...gamesState.currentGame, players: [...gamesState.currentGame.players, values]},
       isSubmitting: false,
     });
   };
@@ -152,10 +144,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     }));
   };
 
-  const handleAddQuestion = (gm: GameProp) => {
+  const handleAddQuestion = (currentGame: GameProp) => {
     setGamesState({
       ...gamesState,
-      currentGame: gm,
+      currentGameId: currentGame.gameId,
       isQuestionModalVisible: true,
     });
   };
@@ -163,7 +155,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
   const onQuestionFinish = (values: QuestionProp, gameId: string) => {
     setGamesState({
       ...gamesState,
-      currentGame: { ...gamesState.currentGame, questions: [...gamesState.currentGame.questions, values]},
       isSubmitting: true,
     });
 
@@ -174,7 +165,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
 
     setGamesState({
       ...gamesState,
-      currentGame: { ...gamesState.currentGame, questions: [...gamesState.currentGame.questions, values]},
       isSubmitting: false,
     });
   };
@@ -195,7 +185,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     navigate( `games/${item.gameId}`)
   };
 
-  const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting, isLoading } = gamesState;
+  const { currentGameId, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting, isLoading } = gamesState;
   
   const EmptyListAlert = () => (
     <Alert
@@ -211,10 +201,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     <>
       <Row justify="center" className="games-heading" style={{ textAlign: 'center' }}>
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-          <Title level={3}>Tervetuloa Family gamin! Luo peli napsauttamalla "Luo peli" -painiketta.</Title>
+          <Title level={3}>Welcome to the Family game! Create a game by pressing the "Create game" button bellow.</Title>
           <Button type="primary" size="large" onClick={handleOpenAddGameModal}>
             <PlusCircleOutlined />
-            Luo peli
+            Create game
           </Button>
         </Col>
       </Row>
@@ -251,14 +241,14 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                     )) ||
                       (item.players.length === 0 && item.questions.length === 0 && (
                         <Alert
-                          message="Lisää pelaajia ja kysymyksiä aloittaaksesi pelaamisen"
+                          message="Add questions and players to being playing the game"
                           type="error"
                           showIcon={true}
                         />
                       )) ||
                       (item.questions.length % item.players.length !== 0 && (
                         <Alert
-                          message="Kysymysten määrä on jaettava tasan pelaajan lukumäärään"
+                          message="Number of questions should be equally divisbile by number of players"
                           type="error"
                           showIcon={true}
                         />
@@ -286,7 +276,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                             onClick={() => handleAddQuestion(item)}
                           >
                             <FileUnknownOutlined />
-                            Lisää kysymys
+                            Add question
                           </Button>
                         </div>
                       </Col>
@@ -310,7 +300,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                             onClick={() => handleAddPlayer(item)}
                           >
                             <UsergroupAddOutlined />
-                            Lisää pelaaja tai tiimi
+                            Add player or team name
                           </Button>
                         </div>
                       </Col>
@@ -370,11 +360,11 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         onCancel={handleOpenAddPlayerModal}
         footer={false}
       >
-        {currentGame.players.map((player) => (
+        {games.find(game => game.gameId === currentGameId)?.players.map((player) => (
           <Tag
             key={player?.playerId ?? player.name}
             closable={true}
-            onClose={() => deletePlayer({ playerId: player.playerId }, currentGame.gameId)}
+            onClose={() => deletePlayer({ playerId: player.playerId }, currentGameId)}
           >
             {player.name}
           </Tag>
@@ -382,11 +372,11 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         <Form
           layout="vertical"
           ref={formRef}
-          onFinish={(value) => onPlayerFinish(value, currentGame.gameId)}
+          onFinish={(value) => onPlayerFinish(value, currentGameId)}
           onFinishFailed={onPlayerFinishFailed}
           style={{ marginTop: 20 }}
         >
-          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input player name!' }]}>
+          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please write player name!' }]}>
             <Input />
           </Form.Item>
 
@@ -413,12 +403,12 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         onCancel={handleOpenAddQuestionModal}
         footer={false}
       >
-        {currentGame.questions.map((question) => (
+        {games.find(game => game.gameId === currentGameId)?.questions.map((question) => (
           <Tag
             key={question?.questionId ?? question.question}
             className={question.questionId}
             closable={true}
-            onClose={() => deleteQuestion({ questionId: question.questionId }, currentGame.gameId)}
+            onClose={() => deleteQuestion({ questionId: question.questionId }, currentGameId)}
           >
             {question.question}
           </Tag>
@@ -426,11 +416,11 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
         <Form
           layout="vertical"
           ref={formRef}
-          onFinish={(value) => onQuestionFinish(value, currentGame.gameId)}
+          onFinish={(value) => onQuestionFinish(value, currentGameId)}
           onFinishFailed={onQuestionFinishFailed}
           style={{ marginTop: 20 }}
         >
-          <Form.Item label="Question" name="question" rules={[{ required: true, message: 'Please input question!' }]}>
+          <Form.Item label="Question" name="question" rules={[{ required: true, message: 'Please write question!' }]}>
             <Input />
           </Form.Item>
           <Form.Item>

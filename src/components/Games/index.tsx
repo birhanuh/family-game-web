@@ -41,10 +41,10 @@ interface GamesProps {
 interface DispatchProps {
   getGames: () => Promise<void>;
   createGame: (game: GameProp) => Promise<void>;
-  addPlayer: (player: PlayerProp) => Promise<void>;
-  addQuestion: (question: QuestionProp) => Promise<void>;
-  deletePlayer: (player: DeletePlayerProp) => Promise<void>;
-  deleteQuestion: (question: DeleteQuestionProp) => Promise<void>;
+  addPlayer: (player: PlayerProp, gameId: string) => Promise<void>;
+  addQuestion: (question: QuestionProp, gameId: string) => Promise<void>;
+  deletePlayer: (player: DeletePlayerProp, gameId: string) => Promise<void>;
+  deleteQuestion: (question: DeleteQuestionProp, gameId: string) => Promise<void>;
 }
 
 interface StateProps {
@@ -66,12 +66,17 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     isPlayerModalVisible: false,
     isQuestionModalVisible: false,
     isSubmitting: false,
-    isLoading: true,
+    isLoading: false,
   });
 
   const formRef = useRef<any | undefined>(null);
   
   useEffect(() => {
+    setGamesState({
+      ...gamesState,
+      isLoading: true,
+    });
+    
     getGames().then(() => setGamesState({
       ...gamesState,
       isLoading: false,
@@ -120,14 +125,14 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
     });
   };
 
-  const onPlayerFinish = (values: PlayerProp, gameId: string) => {
+  const onPlayerFinish = (values: PlayerProp, gameId: string) => {    
     setGamesState({
       ...gamesState,
       currentGame: { ...gamesState.currentGame, players: [...gamesState.currentGame.players, values]},
       isSubmitting: true,
     });
 
-    addPlayer({ ...values, gameId });
+    addPlayer({ ...values },  gameId);
 
     // @ts-ignore
     formRef.current.resetFields();
@@ -162,7 +167,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       isSubmitting: true,
     });
 
-    addQuestion({ ...values, gameId });
+    addQuestion({ ...values }, gameId);
 
     // @ts-ignore
     formRef.current.resetFields();
@@ -191,7 +196,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
   };
 
   const { currentGame, isGameModalVisible, isPlayerModalVisible, isQuestionModalVisible, isSubmitting, isLoading } = gamesState;
-
+  
   const EmptyListAlert = () => (
     <Alert
       style={{ marginTop: 20, marginBottom: 20 }}
@@ -264,10 +269,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <div className="tags">
                             {item.questions.map((question) => (
                               <Tag
-                                key={`${question.questionId}-q`}
+                                key={question?.questionId ?? question.question}
                                 closable={true}
                                 onClose={() =>
-                                  deleteQuestion({ gameId: item.gameId, questionId: question.questionId })
+                                  deleteQuestion({ questionId: question.questionId }, item.gameId)
                                 }
                               >
                                 <div className="ant-tag-question">{question.question}</div>
@@ -290,9 +295,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <div className="tags">
                             {item.players.map((player) => (
                               <Tag
-                                key={`${player.playerId}-q`}
+                                key={player?.playerId ?? player.name}
                                 closable={true}
-                                onClose={() => deletePlayer({ gameId: item.gameId, playerId: player.playerId })}
+                                onClose={() => deletePlayer({ playerId: player.playerId }, item.gameId)}
                               >
                                 {player.name}
                               </Tag>
@@ -315,9 +320,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                         <Button
                         block
                         type='default'
-                        disabled={ item.players.length > item.questions.length ||
+                        disabled={(item.players.length > item.questions.length) ||
                           (item.players.length === 0 && item.questions.length === 0) ||
-                          item.questions.length % item.players.length !== 0}
+                          (item.questions.length % item.players.length !== 0)}
                           onClick={() => handleOnClick(item)}
                         >
                           <PlayCircleOutlined />
@@ -343,7 +348,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
           <Form.Item label="Game" name="title" rules={[{ required: true, message: 'Please input game title!' }]}>
             <Input />
           </Form.Item>
-
           <Form.Item>
             <Space wrap>
               <Button type="primary" htmlType="submit" disabled={isSubmitting}>
@@ -368,9 +372,9 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       >
         {currentGame.players.map((player) => (
           <Tag
-            key={`${player.playerId}-p2`}
+            key={player?.playerId ?? player.name}
             closable={true}
-            onClose={() => deletePlayer({ gameId: currentGame.gameId, playerId: player.playerId })}
+            onClose={() => deletePlayer({ playerId: player.playerId }, currentGame.gameId)}
           >
             {player.name}
           </Tag>
@@ -411,10 +415,10 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
       >
         {currentGame.questions.map((question) => (
           <Tag
-            key={`${question.questionId}-q2`}
+            key={question?.questionId ?? question.question}
             className={question.questionId}
             closable={true}
-            onClose={() => deleteQuestion({ gameId: currentGame.gameId, questionId: question.questionId })}
+            onClose={() => deleteQuestion({ questionId: question.questionId }, currentGame.gameId)}
           >
             {question.question}
           </Tag>
@@ -429,7 +433,6 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
           <Form.Item label="Question" name="question" rules={[{ required: true, message: 'Please input question!' }]}>
             <Input />
           </Form.Item>
-
           <Form.Item>
             <Space wrap>
               <Button type="primary" htmlType="submit" disabled={isSubmitting}>

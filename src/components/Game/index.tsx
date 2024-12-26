@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Button, Card, Col, Row, List, Typography, Modal, Divider, Alert, Breadcrumb } from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Card, Col, Row, List, Typography, Modal, Divider, Breadcrumb } from 'antd';
 import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, MinusCircleOutlined, PlayCircleOutlined, PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import { GameProp, PlayerProp, QuestionProp, UpdateGameProp } from "../../actions/types";
@@ -11,13 +11,6 @@ import confetti from "canvas-confetti";
 import { Link } from "react-router-dom";
 import { withRouter } from "../../withRouter";
 
-const myCanvas: any = document.getElementById('canvas');
-
-const myConfetti = confetti.create(myCanvas, {
-  resize: true,
-  useWorker: true,
-});
-
 const cling = require('../../audios/cling.mp3');
 const clingAudio = new Audio(cling);
 
@@ -27,23 +20,21 @@ const confettiAudio = new Audio(confettiA);
 const { Title } = Typography;
 
 interface GameProps {
-  seconds: number;
-  isGameActive: boolean;
+  status: 'start' | 'pause' | 'reset';
   isGameOver: boolean;
-  game: GameProp;
   currentQuestion: QuestionProp;
   currentPlayer: PlayerProp;
   winner: PlayerProp;
   isConfirmationModalVisible: boolean;
   nextPlayerIndex: number;
-  noCurrentPlayerError: boolean;
+  isLoading: boolean;
 }
 
 interface DispatchProps {
   getGame: (id: string) => Promise<void>;
   updateGame: (game: UpdateGameProp) => Promise<void>;
-  updatePlayer: (player: PlayerProp) => Promise<void>;
-  updateQuestion: (question: QuestionProp) => Promise<void>;
+  updatePlayer: (player: PlayerProp, gameId: string) => Promise<void>;
+  updateQuestion: (question: QuestionProp, gameId: string) => Promise<void>;
   resetGame: (id: string) => Promise<void>;
 }
 
@@ -55,34 +46,51 @@ interface StateProps {
   game?: GameProp;
 }
 
-let countdown: any;
+type ConfirmActionType = 'yes' | 'no';
+
+type EditScoreType = 'plus' | 'minus';
 
 const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGame }: StateProps & DispatchProps) => {
   const params = useParams();
 
+  const [seconds, setSeconds] = useState<number>(30);
   const [gameState, setGameState] = useState<GameProps>({
-    seconds: 30,
-    isGameActive: false,
+    status: 'pause',
     isGameOver: false,
-    game: { gameId: '', title: '', winner: { playerId: '', name: '', score: 0 }, players: [{ playerId: '', name: '', score: 0 }], questions: [{ questionId: '', question: '', isAsked: false }] },
-    currentQuestion: { gameId: '', questionId: '', question: '', isAsked: false },
-    currentPlayer: { gameId: '', playerId: '', name: '', score: 0 },
-    winner: { gameId: '', playerId: '', name: '', score: 0 },
+    currentQuestion: { questionId: '', question: '', isAsked: false },
+    currentPlayer: { playerId: '', name: '', score: 0 },
+    winner: { playerId: '', name: '', score: 0 },
     isConfirmationModalVisible: false,
     nextPlayerIndex: 0,
-    noCurrentPlayerError: false
+    isLoading: false
   });
 
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const myConfetti = confetti.create(canvasRef as any, {
+    resize: true,
+    useWorker: true,
+  });
+  
   useEffect(() => {
+    setGameState(({
+      ...gameState,
+      isLoading: true
+    }));
+
     // Set Game when id is present in params
     if (params.gameId) {
-     getGame(params.gameId)
+     getGame(params.gameId).then(() =>  setGameState(({
+      ...gameState,
+      isLoading: false
+    })))
     }
-  }, [])
+  }, [params.gameId])
 
   useEffect(() => {
+    console.log('GM: ', game);    
     if (game) {
-      const { gameId, winner, title, players, questions } = game;
+      const { winner, players, questions } = game;
 
       const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
 
@@ -100,7 +108,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
           const winners = players.filter((player: PlayerProp) => player.score === maxScore && player);
 
           if (winners.length === 1) {
-            updateGame({ gameId, title, winner: winners[0] });
+            updateGame({ ...game, winner: winners[0] });
 
             setGameState(({
               ...gameState,
@@ -118,151 +126,120 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
   },[game])
 
   useEffect(() => {
-    // Stop countdown
-    clearInterval(countdown);
-  },[])
+    if (seconds < 6) {
+      clingAudio.play();
+    } 
+    
+    if (seconds === 0) {
+      // Show confirmation dialog
+      setGameState(({
+        ...gameState,
+        status: 'reset',
+        isConfirmationModalVisible: true
+      }));
+    }
+  }, [seconds]);
+
+  useEffect(() => {
+    let interval: undefined | NodeJS.Timeout;
+
+    const {status} = gameState;
+
+    if (status == 'start') {
+      interval = setInterval(() => setSeconds(second => second - 1), 1000);
+    } else if (status === 'pause') {
+      clearInterval(interval);
+    } else if (status === 'reset') {
+      clearInterval(interval);
+
+      setSeconds(30);
+
+      setGameState(({
+        ...gameState,
+        status: 'reset',
+        isGameOver: false
+      }));
+    }
+
+    return () => clearInterval(interval);
+  }, [gameState.status]);
+
+  const handleStart = useCallback(() => {
+    const { nextPlayerIndex } = gameState;
+
+    if (game) {
+      const { gameId, players, questions } = game;
+
+      // Pick current Player
+      const nextPlayerIndexFromStorage = localStorage.getItem(gameId);
+      const nextPlayerIndexDrived = nextPlayerIndexFromStorage && nextPlayerIndexFromStorage.length > 0 ? parseInt(nextPlayerIndexFromStorage) : nextPlayerIndex;
+      const currentPlayer = players[nextPlayerIndexDrived] ? players[nextPlayerIndexDrived] : players[0];
+      
+       // Pick current Question
+      const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
+      const random = Math.floor(Math.random() * questionsFiltered.length);
+      const currentQuestion = questionsFiltered[random];
+
+      // Save nextPlayerIndex to storage for page refresh
+      localStorage.setItem(gameId, (players.indexOf(currentPlayer) + 1).toString());
+  
+      setGameState(({
+        ...gameState,
+        currentPlayer,
+        currentQuestion,
+        status: 'start',
+        nextPlayerIndex: players.indexOf(currentPlayer) + 1
+      }));
+    }
+  }, [game, gameState]);
+
+  const handleYesNo = (action: ConfirmActionType) => {
+    const { currentPlayer, currentQuestion } = gameState;
+
+    if(game) {
+      updatePlayer({ ...currentPlayer, score: action === 'yes'  ? currentPlayer.score + 1 : currentPlayer.score }, game.gameId); 
+
+      updateQuestion({ ...currentQuestion, isAsked: true }, game.gameId);
+    }
+
+    setGameState(({
+      ...gameState,
+      isConfirmationModalVisible: false
+    }));
+  }
+
+  const handleEditScore = (action: EditScoreType) => {
+    const { currentPlayer, currentQuestion } = gameState;
+    
+    if (game) {
+      updatePlayer({ ...currentPlayer, score: action === 'plus' ? currentPlayer.score + 1 : currentPlayer.score - 1 }, game.gameId);
+
+      updateQuestion({ ...currentQuestion, isAsked: true }, game.gameId); 
+    }
+
+    // Reset countdown
+    setGameState(({
+      ...gameState,
+      status: 'reset'
+    }));
+  };
 
   const handleReset = () => {
     if (game) {      
-    resetGame(game.gameId);
+      resetGame(game.gameId);
 
-    // Active game back
-    setGameState(({
-      ...gameState,
-      isGameOver: false
-    }));
-
-    // Reset nextPlayerIndex
-    localStorage.setItem(game.gameId, '0');
+      // Reset nextPlayerIndex
+      localStorage.setItem(game.gameId, '0');
     }
-  }
 
-  const handleStart = () => {
-    setGameState(({
+    // Reset countdown
+       setGameState(({
       ...gameState,
-      seconds: 30,
-      isGameActive: true,
-      noCurrentPlayerError: false
-    }));
-
-    let secondsCloned = 30;
-
-    const { game: { gameId, players, questions } } = gameState;
-    const { nextPlayerIndex } = gameState;
-
-    // Pick current Player
-    const nextPlayerIndexFromStorage = localStorage.getItem(gameId);
-    const nextPlayerIndexDrived = nextPlayerIndexFromStorage && nextPlayerIndexFromStorage.length > 0 ? parseInt(nextPlayerIndexFromStorage) : nextPlayerIndex;
-
-    const currentPlayer = players[nextPlayerIndexDrived] ? players[nextPlayerIndexDrived] : players[0];
-
-    setGameState(({
-      ...gameState,
-      currentPlayer: { gameId, ...currentPlayer },
-      nextPlayerIndex: players.indexOf(currentPlayer) + 1
-    }));
-
-    // Save nextPlayerIndex to storage for page refresh
-    localStorage.setItem(gameId, (players.indexOf(currentPlayer) + 1).toString());
-
-    const questionsFiltered = questions.filter((question: any) => !question.isAsked);
-    // Pick current Question
-    const random = Math.floor(Math.random() * questionsFiltered.length);
-
-    const currentQuestion = questionsFiltered[random];
-
-    setGameState(({
-      ...gameState,
-      currentQuestion: { gameId, ...currentQuestion },
-    }));
-
-    // Start countdown
-    countdown = setInterval(() => {
-      if (secondsCloned > 0) {
-        setGameState((state: GameProps) => ({
-          ...gameState,
-          seconds: state.seconds - 1
-        }));
-
-        secondsCloned = secondsCloned - 1;
-
-        // Play cling
-        if (secondsCloned < 6) {
-          // cling
-          clingAudio.play();
-        }
-      } else if (secondsCloned === 0) {
-        handleConfirmationModal();
-
-        secondsCloned = -1;
-      }
-    }, 1000);
-  }
-
-  // Confirmation
-  const handleConfirmationModal = () => {
-    setGameState(({
-      ...gameState,
-      isConfirmationModalVisible: true
-    }));
-  };
-
-  const handleYes = () => {
-    const { currentPlayer, currentQuestion } = gameState;
-
-    updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
-
-    updateQuestion({ ...currentQuestion, isAsked: true });
-
-    setGameState(({
-      ...gameState,
-      isGameActive: false,
-      isConfirmationModalVisible: false
+      status: 'reset'
     }));
   }
 
-  const handleNo = () => {
-    const { currentQuestion } = gameState;
-
-    updateQuestion({ ...currentQuestion, isAsked: true });
-
-    setGameState(({
-      ...gameState,
-      isGameActive: false,
-      isConfirmationModalVisible: false
-    }));
-  }
-
-  const handleEditScoreMinus = (passedPlayer: PlayerProp) => {
-    const { game: { gameId } } = gameState;
-    updatePlayer({ gameId, ...passedPlayer, score: passedPlayer.score - 1 });
-  };
-
-  const handleEditScorePlus = () => {
-    const { currentPlayer, currentQuestion } = gameState;
-
-    if (currentPlayer.gameId?.length !== 0) {
-      // Stop countdown
-      clearInterval(countdown);
-
-      setGameState(({
-        ...gameState,
-        seconds: 30,
-        isGameActive: false,
-      }));
-
-      updatePlayer({ ...currentPlayer, score: currentPlayer.score + 1 });
-
-      updateQuestion({ ...currentQuestion, isAsked: true });
-    } else {
-      setGameState(({
-        ...gameState,
-        noCurrentPlayerError: true,
-      }));
-    }
-  };
-
-  const { seconds, currentPlayer: { playerId, name }, currentQuestion: { question }, winner, isGameActive, isGameOver, isConfirmationModalVisible, noCurrentPlayerError } = gameState;
+  const { currentPlayer: { playerId, name }, currentQuestion: { question }, winner, status, isGameOver, isConfirmationModalVisible, isLoading } = gameState;
   
   return (
     <>
@@ -272,7 +249,6 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20} className='back-reset-game'>
           <Breadcrumb items={[{ title: <Link to='/'><ArrowLeftOutlined style={{ marginRight: 8}} />Back to games</Link> }, { title: game?.title}]} />
-
           <Button type='dashed' className='reset-btn' onClick={() => handleReset()}><RedoOutlined />Reset</Button>
         </Col>
       </Row>
@@ -292,14 +268,8 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
         style={{ marginTop: 40 }}
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-          {noCurrentPlayerError && <Alert
-            message="No active Player found"
-            type="error"
-            showIcon={true}
-          />}
           {/* Confetti for winner player */}
-          <canvas id='canvas' style={{ height: 0 }} />
-
+          <canvas  ref={canvasRef} style={{ height: 0 }} />
           <List
             grid={{
               gutter: 48,
@@ -311,21 +281,28 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
               xxl: 4,
             }}
             className='player-items'
+            loading={isLoading}
             split={true}
             style={{ textAlign: 'center' }}
             dataSource={game && game.players}
             renderItem={(item: PlayerProp) => (
               <List.Item>
-
                 <Card title={item.name} bordered={false} className={classnames({
                   "current": item.name === name,
                   "winner": (item.name === (winner.name || game?.winner.name))
                 })}>
-                  <Title level={2} className='score' >{item.score}</Title>
-                  <div>
-                    <Button type='default' size='large' onClick={() => handleEditScoreMinus(item)}><MinusCircleOutlined /></Button>
-                    {item.playerId === playerId && <Button type='default' size='large' onClick={() => handleEditScorePlus()}><PlusCircleOutlined /></Button>}
-                  </div>
+                  <Title level={2} className='score' >{item.score}</Title>                  
+                  <Row
+                    justify="center"
+                    style={{ display: 'flex', justifyContent: 'space-between' }}
+                  >
+                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      {item.playerId === playerId && <Button type='primary' danger={true} size='large' onClick={() => handleEditScore('minus')}><MinusCircleOutlined /></Button>}
+                    </Col>
+                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      {item.playerId === playerId && <Button type='default' size='large' onClick={() => handleEditScore('plus')}><PlusCircleOutlined /></Button>}
+                    </Col>
+                  </Row>
                 </Card>
               </List.Item>
             )}
@@ -337,19 +314,18 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
         style={{ marginTop: 60 }}
       >
         <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-          {isGameOver ? <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => handleReset()}><RedoOutlined />Reset</Button> :
-            <Button type='primary' size='large' className='success-btn' block={true} disabled={isGameActive} onClick={() => handleStart()}><PlayCircleOutlined />Start</Button>}
+          <Button type='default' size='large' block={true} disabled={status === 'start'} onClick={() => isGameOver ? handleReset() : handleStart()}>
+          {isGameOver ? <RedoOutlined /> : <PlayCircleOutlined /> }
+          {isGameOver ? ' Reset' : ' Start' }
+          </Button>
         </Col>
       </Row>
 
       {/* Confirmation modal */}
       <Modal className='game' title={<Title level={4}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
-
-        <Button type='primary' className='success-btn' block={true} onClick={() => handleYes()}><CheckOutlined />Yes</Button>
-
+        <Button type='default' block={true} onClick={() => handleYesNo('yes')}><CheckOutlined />Yes</Button>
         <Divider />
-
-        <Button type='primary' danger={true} className='start-btn' block={true} onClick={() => handleNo()}><CloseOutlined />No</Button>
+        <Button type='primary' danger={true} block={true} onClick={() => handleYesNo('no')}><CloseOutlined />No</Button>
       </Modal>
     </>
   );

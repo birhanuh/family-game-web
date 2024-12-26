@@ -99,93 +99,99 @@ export function deleteGame(id: string) {
 }
 
 // PLAYER
-export function addPlayerAction(player: PlayerProp) {
+export function addPlayerAction(player: PlayerProp, gameId: string) {
   return {
     type: ADD_PLAYER,
-    player
+    player,
+    gameId
   }
 }
 
-export function updatedPlayerAction(player: PlayerProp) {
+export function updatedPlayerAction(player: PlayerProp, gameId: string) {
   return {
     type: UPDATE_PLAYER,
-    player
+    player,
+    gameId
   }
 }
 
-export function deletedPlayerAction(player: DeletePlayerProp) {
+export function deletedPlayerAction(player: DeletePlayerProp, gameId: string) {
   return {
     type: DELETE_PLAYER,
-    player
+    player,
+    gameId
   }
 }
 
-export function addPlayer(player: PlayerProp) {
+export function addPlayer(player: PlayerProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${player.gameId}/players/add`, { name: player.name }).then(res => {
-      dispatch(addPlayerAction(res.data));;
+    return axios.put(`${process.env.API_URL}/games/${gameId}/players/add`, { name: player.name }).then(res => {
+      dispatch(addPlayerAction(res.data, gameId));
     })
   }
 }
 
-export function updatePlayer(player: PlayerProp) {
+export function updatePlayer(player: PlayerProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${player.gameId}/players/${player.playerId}/update`, player).then(res => {
-      dispatch(updatedPlayerAction(res.data));;
+    return axios.put(`${process.env.API_URL}/games/${gameId}/players/${player.playerId}/update`, player).then(res => {
+      dispatch(updatedPlayerAction(res.data, gameId));
     })
   }
 }
 
-export function deletePlayer(player: DeletePlayerProp) {
+export function deletePlayer(player: DeletePlayerProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.delete(`${process.env.API_URL}/games/${player.gameId}/players/${player.playerId}/delete`).then(res => {
-      dispatch(deletedPlayerAction(res.data));;
+    return axios.delete(`${process.env.API_URL}/games/${gameId}/players/${player.playerId}/delete`).then(res => {
+      dispatch(deletedPlayerAction(res.data, gameId));
     })
   }
 }
 
 // QUESTION
-export function addQuestionAction(question: QuestionProp) {
+export function addQuestionAction(question: QuestionProp, gameId: string) {
   return {
     type: ADD_QUESTION,
-    question
+    question,
+    gameId
   }
 }
 
-export function updatedQuestionAction(question: QuestionProp) {
+export function updatedQuestionAction(question: QuestionProp, gameId: string) {
   return {
     type: UPDATE_QUESTION,
-    question
+    question,
+    gameId
   }
 }
 
-export function deletedQuestionAction(question: DeletePlayerProp) {
+export function deletedQuestionAction(question: DeletePlayerProp, gameId: string) {
   return {
     type: DELETE_QUESTION,
-    question
+    question,
+    gameId
   }
 }
 
-export function addQuestion(question: QuestionProp) {
+export function addQuestion(question: QuestionProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${question.gameId}/questions/add`, { question: question.question }).then(res => {
-      dispatch(addQuestionAction(res.data));
+    return axios.put(`${process.env.API_URL}/games/${gameId}/questions/add`, { question: question.question }).then(res => {
+      dispatch(addQuestionAction(res.data, gameId));
     })
   }
 }
 
-export function updateQuestion(question: QuestionProp) {
+export function updateQuestion(question: QuestionProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${question.gameId}/questions/${question.questionId}/update`, question).then(res => {
-      dispatch(updatedQuestionAction(res.data));
+    return axios.put(`${process.env.API_URL}/games/${gameId}/questions/${question.questionId}/update`, question).then(res => {
+      dispatch(updatedQuestionAction(res.data, gameId));
     })
   }
 }
 
-export function deleteQuestion(question: DeleteQuestionProp) {
+export function deleteQuestion(question: DeleteQuestionProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.delete(`${process.env.API_URL}/games/${question.gameId}/questions/${question.questionId}/delete`).then(res => {
-      dispatch(deletedQuestionAction(res.data));
+    return axios.delete(`${process.env.API_URL}/games/${gameId}/questions/${question.questionId}/delete`).then(res => {
+      dispatch(deletedQuestionAction(res.data, gameId));
     })
   }
 }

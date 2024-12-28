@@ -21,8 +21,10 @@ const App = () => {
               defaultBorderColor: '#75C225',
               defaultColor: '#ffffff',
               defaultHoverColor: '#ffffff',
-              defaultHoverBorderColor: '#75C225',
               defaultHoverBg: 'rgba(117,194,37,0.8)',
+              defaultHoverBorderColor: '#75C225',
+              defaultActiveBg: 'rgba(117,194,37,0.8)',
+              defaultActiveBorderColor: '#75C225',
               fontWeight: 600
             },
             Menu: {

@@ -260,7 +260,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                             {item.questions.map((question) => (
                               <Tag
                                 key={question?.questionId ?? question.question}
-                                closable={true}
+                                closable={Object.keys(item.winner).length === 0}
                                 onClose={() =>
                                   deleteQuestion({ questionId: question.questionId }, item.gameId)
                                 }
@@ -272,7 +272,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <Button
                             type="primary"
                             size="small"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || Object.keys(item.winner).length > 0}
                             onClick={() => handleAddQuestion(item)}
                           >
                             <FileUnknownOutlined />
@@ -286,7 +286,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                             {item.players.map((player) => (
                               <Tag
                                 key={player?.playerId ?? player.name}
-                                closable={true}
+                                closable={Object.keys(item.winner).length === 0 && true}
                                 onClose={() => deletePlayer({ playerId: player.playerId }, item.gameId)}
                               >
                                 {player.name}
@@ -296,7 +296,7 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                           <Button
                             type="primary"
                             size="small"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || Object.keys(item.winner).length > 0 }
                             onClick={() => handleAddPlayer(item)}
                           >
                             <UsergroupAddOutlined />
@@ -305,8 +305,8 @@ const Games = ({ games, getGames, createGame, addPlayer, addQuestion, deletePlay
                         </div>
                       </Col>
                     </Row>
-                    <Row justify="center">
-                      <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                    <Row>
+                      <Col span={8} offset={8}>
                         <Button
                         block
                         type='default'

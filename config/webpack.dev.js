@@ -34,7 +34,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.CLIENT_URL': JSON.stringify('http://localhost:3000'),
-      'process.env.API_URL': JSON.stringify('https://ns8tz7m7v1.execute-api.eu-west-1.amazonaws.com'),  //http://localhost:3000/dev
+      'process.env.API_URL': JSON.stringify('https://reb7wp1v97.execute-api.eu-west-1.amazonaws.com'),  //http://localhost:3000/dev
     }),
   ],
   output: {
@@ -71,7 +71,7 @@ module.exports = {
         ],
       },
       {
-        test: /\.(png|svg|jpg|gif|mp3)$/,
+        test: /\.(png|svg|jpg|ico|gif|mp3)$/,
          type: 'asset/resource',
       },
       {

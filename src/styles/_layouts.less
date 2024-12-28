@@ -29,11 +29,10 @@ body,
 }
 
 // Card
-.ant-card {
-  box-shadow: 0 1px 2px -2px rgb(248 66 66 / 16%), 0 3px 6px 0 rgb(248 66 66 / 12%), 0 5px 12px 4px rgb(248 66 66 / 9%);
-
-  .ant-card-head-title {
-    text-transform: uppercase;
+.ant-list-item {
+  box-shadow: 0 1px 2px -2px rgba(248,66,66, 0.16), 0 3px 6px 0 rgba(248,66,66, 0.12), 0 5px 12px 4px rgba(248,66,66, 0.09);
+  .ant-card-head {
+    border-bottom: 1px solid #fcb3b3;
   }
 }
 
@@ -57,16 +56,6 @@ body,
 }
 
 // Games
-.games-heading {
-  h3.ant-typography {
-    line-height: 64px;
-  }
-}
-
-.no-winner {
-  visibility: hidden;
-}
-
 .ant-ribbon {
   background-color: @blue;
   .ant-ribbon-corner {
@@ -89,29 +78,21 @@ body,
   }
 }
 
-.tags {
+.tags, .ant-modal-content {
   margin-bottom: 16px;
   span.ant-tag {
     margin: 6px;
   }
 }
 
-.tags,
-.ant-modal-content {
-  span.ant-tag {
-    margin: 6px;
-  }
+// Game
+.no-winner {
+  visibility: hidden;
 }
 
-// Game
-.player-items {
-  .current, .winner {
-    .ant-card-head-title {
-      color: @green;
-    }
-  }
-  .ant-spin-container > div {
-    justify-content: space-around;
+.current, .winner {
+  .ant-card-head-title {
+    color: @green;
   }
 }
 

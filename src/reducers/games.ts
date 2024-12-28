@@ -1,11 +1,11 @@
-import { GameProp } from '../actions/types'
+import { GameProp, ActionProp } from '../actions/types'
 import {
   CREATE_GAME, GET_GAMES, GET_GAME, UPDATE_GAME, RESET_GAME, DELETE_GAME,
   ADD_PLAYER, UPDATE_PLAYER, DELETE_PLAYER,
   ADD_QUESTION, UPDATE_QUESTION, DELETE_QUESTION, 
 } from '../constants/games'
 
-export const gameReducer = (state: GameProp[] = [], action = { id: '', type: '', games: [], gameId: '', game: { gameId: '', title: '',  }, player: { playerId: '', name: '', score: 0 }, question: { questionId: '', question: '', isAsked: false } })=> {
+export const gameReducer = (state: GameProp[] = [], action: ActionProp )=> {
   switch (action.type) {
 
     case GET_GAMES:

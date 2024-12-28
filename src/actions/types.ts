@@ -6,6 +6,7 @@ export interface GameProp {
   players: PlayerProp[];
   questions: QuestionProp[];
 }
+
 export interface UpdateGameProp {
   gameId: string;
   title: string;
@@ -18,6 +19,7 @@ export interface PlayerProp {
   name: string;
   score: number;
 }
+
 export interface DeletePlayerProp {
   playerId: string;
 }
@@ -31,4 +33,15 @@ export interface QuestionProp {
 
 export interface DeleteQuestionProp {
   questionId: string;
+}
+
+// Action
+export interface ActionProp {
+  id: string;
+  type: string;
+  game: GameProp;
+  games: GameProp[];
+  gameId: string;
+  player: PlayerProp;
+  question: QuestionProp;
 }

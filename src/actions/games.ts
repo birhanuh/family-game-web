@@ -68,7 +68,7 @@ export function getGames() {
 
 export function getGame(id: string) {
   return (dispatch: any) => {
-    return axios.get(`${process.env.API_URL}/games/get/${id}`).then(res => {
+    return axios.get(`${process.env.API_URL}/games/${id}/get`).then(res => {
       dispatch(getGameAction(res.data.Item))
     })
   }
@@ -125,7 +125,7 @@ export function deletedPlayerAction(player: DeletePlayerProp, gameId: string) {
 
 export function addPlayer(player: PlayerProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${gameId}/players/add`, { name: player.name }).then(res => {
+    return axios.put(`${process.env.API_URL}/games/${gameId}/players/create`, { name: player.name }).then(res => {
       dispatch(addPlayerAction(res.data, gameId));
     })
   }
@@ -174,7 +174,7 @@ export function deletedQuestionAction(question: DeletePlayerProp, gameId: string
 
 export function addQuestion(question: QuestionProp, gameId: string) {
   return (dispatch: any) => {
-    return axios.put(`${process.env.API_URL}/games/${gameId}/questions/add`, { question: question.question }).then(res => {
+    return axios.put(`${process.env.API_URL}/games/${gameId}/questions/create`, { question: question.question }).then(res => {
       dispatch(addQuestionAction(res.data, gameId));
     })
   }

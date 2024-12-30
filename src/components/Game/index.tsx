@@ -75,19 +75,19 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     if (game) {
       const { winner, players, questions } = game;
 
-      const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
+      const notAskedQquestions = questions.filter((question: QuestionProp) => !question.isAsked);
 
-      if (questionsFiltered.length === 0) {
+      if (notAskedQquestions.length === 0) {
         
         setIsGameOver(true);
         
         setSeconds(0);
-        
+      
         if (Object.keys(winner).length === 0) {
           const maxScore =  players.reduce((acc: number, val: PlayerProp) => 
             (val.score > acc) ? val.score : acc, 0);
 
-          // Calculate draw
+          // Calculate result
           const winners = players.filter((player: PlayerProp) => player.score === maxScore && player);
 
           if (winners.length === 1) {
@@ -143,13 +143,11 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     const { status } = gameState;
 
     if (status == 'start') {
-    setSeconds(30);
       interval = setInterval(() => setSeconds(prev => prev - 1), 1000);
     } else if (status === 'stop') {
       clearInterval(interval);
     } else if (status === 'reset') {
       clearInterval(interval);
-      setSeconds(30);
     }
 
     return () => clearInterval(interval);
@@ -167,12 +165,15 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       const currentPlayer = players[nextPlayerIndexDrived] ? players[nextPlayerIndexDrived] : players[0];
       
        // Pick current Question
-      const questionsFiltered = questions.filter((question: QuestionProp) => !question.isAsked);
-      const random = Math.floor(Math.random() * questionsFiltered.length);
-      const currentQuestion = questionsFiltered[random];
+      const notAskedQquestions = questions.filter((question: QuestionProp) => !question.isAsked);
+      const random = Math.floor(Math.random() * notAskedQquestions.length);
+      const currentQuestion = notAskedQquestions[random];
 
       // Save nextPlayerIndex to storage for page refresh
       localStorage.setItem(gameId, (players.indexOf(currentPlayer) + 1).toString());
+
+      // Start game
+      setSeconds(30);
 
       setGameState(({
         ...gameState,
@@ -197,7 +198,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
 
       updateQuestion({ ...question, isAsked: true }, game.gameId);
     }
-
+    
     setGameState(({
       ...gameState,
       isConfirmationModalVisible: false
@@ -209,7 +210,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     
     const player = game?.players.find(player => player.playerId === currentPlayerId);
     const question = game?.questions.find(question => question.questionId === currentQuestionId);
-
+    
     if (game && player && question) {
       if (action === 'minus' && player.score > 0) {
        updatePlayer({ ...player, score: player.score - 1 }, game.gameId); 
@@ -229,7 +230,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
     }));
   }, [game, gameState]);
 
-  const handleReset = () => {
+  const handleReset = () => {    
     if (game) {      
       resetGame(game.gameId);
 
@@ -237,11 +238,14 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       localStorage.setItem(game.gameId, '0');
     }
 
+    setSeconds(30);
+
     // Reset countdown
     setGameState(({
       ...gameState,
       currentPlayerId: '',
       currentQuestionId: '',
+      winner: { name: '', playerId: '', score: 0 },
       status: 'reset'
     }));
 
@@ -252,7 +256,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
   
   const player = game?.players.find(player => player.playerId === currentPlayerId)?.name;
   const question = game?.questions.find(question => question.questionId === currentQuestionId)?.question;
-
+  
   return (
     <>
       <Row
@@ -264,19 +268,25 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
           <Button onClick={handleReset}><RedoOutlined />Reset</Button>
         </Col>
       </Row>
-      {(winner.name || game?.winner.name) && <Row
+      <Row
         justify="center"
         style={{ display: 'flex', textAlign: 'center' }}
       >
         <Col xs={24} sm={24} md={24} lg={24} xl={20}>
-          <Alert
+          {isGameOver && (winner.name || game?.winner.name) && <Alert
             style={{ marginTop: 20, marginBottom: 20 }}
             message={`${winner.name || game?.winner.name} has won this game, congratulations 🎉`}
-            type="success"
+            type={(winner.name || game?.winner.name) ? 'success' : 'info'}
             showIcon={true}
-          />
+          />}
+          {isGameOver && (!winner.name && !winner.playerId && !winner.score) && <Alert
+            style={{ marginTop: 20, marginBottom: 20 }}
+            message='Its a draw; play gain to decide a winner.'
+            type='warning'
+            showIcon={true}
+          />}
         </Col>
-      </Row>}
+      </Row>
       <Row
         justify="space-around"
         style={{ display: 'flex', textAlign: 'center' }}
@@ -308,9 +318,8 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
             dataSource={game?.players}
             renderItem={(item: PlayerProp) => (
               <List.Item style={{ textAlign: 'center' }}>
-                <Card title={`${item.name} ${(winner.name || game?.winner.name) === item.name ? '🎉' : ''}`} bordered={false} className={classnames({
-                  "current": !(winner.name || game?.winner.name) && item.name === player,
-                  "winner": (item.name === (winner.name || game?.winner.name))
+                <Card title={`${(winner.name || game?.winner.name) === item.name ? `${item.name} 🎉` : item.name}`} bordered={false} className={classnames({
+                  "green-title": item.name === player || item.name === (winner.name || game?.winner.name),
                 })}>
                     <Title level={3}>{item.score}</Title>
                     <Row justify="center">       
@@ -334,7 +343,7 @@ const Game = ({ game, getGame, updateGame, updatePlayer, updateQuestion, resetGa
       </Row>
 
       {/* Confirmation modal */}
-      <Modal title={<Title level={5}>{`Has ${name} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
+      <Modal title={<Title level={5}>{`Has ${player} answered the question?`}</Title>} open={isConfirmationModalVisible} footer={false} closable={false}>
         <Button type='default' block={true} onClick={() => handleYesNo('yes')}><CheckOutlined />Yes</Button>
         <Divider />
         <Button type='primary' danger={true} block={true} onClick={() => handleYesNo('no')}><CloseOutlined />No</Button>

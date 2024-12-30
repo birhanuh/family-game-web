@@ -34,7 +34,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.CLIENT_URL': JSON.stringify('http://localhost:3000'),
-      'process.env.API_URL': JSON.stringify('https://reb7wp1v97.execute-api.eu-west-1.amazonaws.com'),  //http://localhost:3000/dev
+      'process.env.API_URL': JSON.stringify('https://ti5cpshza6.execute-api.eu-west-1.amazonaws.com'),  //http://localhost:3000/dev
     }),
   ],
   output: {
